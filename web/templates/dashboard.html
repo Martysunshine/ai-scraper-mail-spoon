@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Dashboard</h1>
+
+<div class="cards">
+  <div class="card"><span class="num">{{ metrics.organizations }}</span><span class="lbl">Organizations</span></div>
+  <div class="card"><span class="num">{{ metrics.contacts }}</span><span class="lbl">Contacts (emails)</span></div>
+  <div class="card"><span class="num">{{ metrics.drafts }}</span><span class="lbl">Drafts</span></div>
+  <div class="card"><span class="num">{{ metrics.approved }}</span><span class="lbl">Approved</span></div>
+  <div class="card"><span class="num">{{ metrics.sent_today }}</span><span class="lbl">Sent today</span></div>
+  <div class="card"><span class="num">{{ metrics.cities_pending }}</span><span class="lbl">Cities pending</span></div>
+</div>
+
+<section class="panel">
+  <h2>Current campaign</h2>
+  <ul class="kv">
+    <li><b>Religions:</b> {{ campaign.religions | join(', ') if campaign.religions else '—' }}</li>
+    <li><b>Countries:</b> {{ campaign.countries | length }} selected</li>
+    <li><b>Email mode:</b> <span class="tag tag-{{ campaign.email_mode }}">{{ campaign.email_mode }}</span></li>
+    <li><b>Daily limit:</b> {{ campaign.daily_send_limit }}</li>
+    <li><b>Languages in email:</b>
+        {% if campaign.include_native %}native{% endif %}
+        {% if campaign.include_native and campaign.include_english %}+{% endif %}
+        {% if campaign.include_english %}English{% endif %}
+    </li>
+  </ul>
+  <p>
+    <span class="status {{ 'ok' if places_ok else 'warn' }}">Places API: {{ 'configured' if places_ok else 'not set' }}</span>
+    <span class="status {{ 'ok' if smtp_ok else 'warn' }}">SMTP / mailbox: {{ 'configured' if smtp_ok else 'not set' }}</span>
+  </p>
+</section>
+
+<section class="panel">
+  <h2>Run the pipeline</h2>
+  <p class="hint">Each step runs in the background. Refresh the page to see updated counts and the log below.</p>
+  <div class="actions">
+    <form method="post" action="/actions/seed-cities"><button>1 · Seed cities</button></form>
+    <form method="post" action="/actions/discover"><button {{ '' if places_ok else 'disabled title="Set GOOGLE_PLACES_API_KEY"' }}>2 · Discover</button></form>
+    <form method="post" action="/actions/enrich"><button>3 · Enrich emails</button></form>
+    <form method="post" action="/actions/draft"><button>4 · Draft</button></form>
+    <form method="post" action="/actions/send"><button class="danger" {{ '' if smtp_ok else 'disabled title="Configure SMTP first"' }}>5 · Send</button></form>
+    <form method="post" action="/actions/pipeline"><button class="primary">Run all (no send)</button></form>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Recent task runs</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Task</th><th>Status</th><th>Started</th><th>Details</th></tr></thead>
+    <tbody>
+    {% for r in recent_runs %}
+      <tr>
+        <td>{{ r.id }}</td><td>{{ r.task_name }}</td>
+        <td><span class="tag">{{ r.status }}</span></td>
+        <td>{{ r.started_at.strftime('%Y-%m-%d %H:%M') if r.started_at else '' }}</td>
+        <td>{{ r.details or '' }}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5" class="muted">No runs yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

@@ -1,0 +1,6 @@
+name,city,country,category,religion_guess,address,website,phone,source,source_id,notes
+Example Interfaith Community Berlin,Berlin,Germany,Religious organization,Interfaith,Example Street 1,https://example.org,,manual_sample,sample_001,Sample organization for testing
+Example Catholic Parish Prague,Prague,Czechia,Church,Christian / Catholic,Example Street 2,https://example.com,,manual_sample,sample_002,Sample organization for testing
+Example Buddhist Center Vienna,Vienna,Austria,Religious organization,Buddhist,Example Street 3,https://example.net,,manual_sample,sample_003,Sample organization for testing
+Example Synagogue Amsterdam,Amsterdam,Netherlands,Synagogue,Jewish,Example Street 4,https://example.org,,manual_sample,sample_004,Sample organization for testing
+Example Hindu Mandir Warsaw,Warsaw,Poland,Hindu temple,Hindu,Example Street 5,https://example.com,,manual_sample,sample_005,Sample organization for testing

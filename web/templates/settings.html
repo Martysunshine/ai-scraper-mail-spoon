@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Campaign Setup</h1>
+<p class="hint">Whatever you save here is picked up automatically by the engine (and your agents) on the next run.</p>
+
+<form method="post" action="/settings" class="settings-form">
+
+  <section class="panel">
+    <h2>1 · Religions to target</h2>
+    <p class="hint">The discovery engine searches each selected city for these traditions' venues.</p>
+    <div class="checkgrid">
+      {% for key, rel in religions.items() %}
+      <label class="check {{ 'focus' if rel.focus else '' }}">
+        <input type="checkbox" name="religions" value="{{ key }}"
+               {{ 'checked' if key in campaign.religions else '' }}>
+        <span>{{ rel.name }}{% if rel.focus %} <em>(focus)</em>{% endif %}</span>
+        <small>{{ rel.subtypes | join(', ') }}</small>
+      </label>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>2 · Countries (grouped by language)</h2>
+    <p class="hint">Pick the markets to work. The native language travels with each country so emails can be written in it.</p>
+    <input type="text" id="country-filter" placeholder="Filter countries…" class="filter">
+    <div class="checkgrid countrygrid">
+      {% for c in countries %}
+      <label class="check country-item" data-search="{{ c.country|lower }} {{ c.language|lower }} {{ c.continent|lower }}">
+        <input type="checkbox" name="countries" value="{{ c.country }}||{{ c.language }}"
+               {{ 'checked' if c.country in campaign.countries else '' }}>
+        <span>{{ c.country }}</span>
+        <small>{{ c.language }} · {{ c.continent }} · {{ c.city_count }} cities</small>
+      </label>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>3 · Email content & identity</h2>
+    <div class="grid2">
+      <label>App name<input name="app_name" value="{{ campaign.app_name }}"></label>
+      <label>App URL<input name="app_url" value="{{ campaign.app_url }}"></label>
+      <label>Sender name<input name="sender_name" value="{{ campaign.sender_name }}"></label>
+      <label>Sender email<input name="sender_email" value="{{ campaign.sender_email }}"></label>
+      <label>Sender organization<input name="sender_org" value="{{ campaign.sender_org }}"></label>
+      <label>Subject hint<input name="subject_hint" value="{{ campaign.subject_hint }}"></label>
+    </div>
+    <label class="block">Pitch (what Infinity Faith is — used by the writer)
+      <textarea name="pitch" rows="3">{{ campaign.pitch }}</textarea>
+    </label>
+    <label class="block">Extra instructions to the writer (tone, must-include, must-avoid)
+      <textarea name="extra_instructions" rows="3">{{ campaign.extra_instructions }}</textarea>
+    </label>
+    <div class="row">
+      <label class="inline"><input type="checkbox" name="include_native" {{ 'checked' if campaign.include_native else '' }}> Native language</label>
+      <label class="inline"><input type="checkbox" name="include_english" {{ 'checked' if campaign.include_english else '' }}> English</label>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>4 · Sending policy</h2>
+    <div class="grid2">
+      <label>Daily send limit
+        <input type="number" name="daily_send_limit" min="0" max="2000" value="{{ campaign.daily_send_limit }}">
+      </label>
+      <label>Max organizations per city
+        <input type="number" name="max_orgs_per_city" min="1" max="100" value="{{ campaign.max_orgs_per_city }}">
+      </label>
+      <label>Email mode
+        <select name="email_mode">
+          <option value="draft"   {{ 'selected' if campaign.email_mode == 'draft' else '' }}>draft — never send automatically</option>
+          <option value="review"  {{ 'selected' if campaign.email_mode == 'review' else '' }}>review — only send approved drafts</option>
+          <option value="auto_send" {{ 'selected' if campaign.email_mode == 'auto_send' else '' }}>auto_send — send new drafts automatically</option>
+        </select>
+      </label>
+    </div>
+    <p class="hint">Tip: start in <b>review</b> mode, read a few drafts, then raise the limit / switch to auto_send once you trust the output.</p>
+  </section>
+
+  <div class="form-actions">
+    <button type="submit" class="primary">Save campaign</button>
+  </div>
+</form>
+{% endblock %}

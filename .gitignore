@@ -1,0 +1,42 @@
+# Secrets — never commit
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Database & generated data
+data/outreach.sqlite
+data/outreach.sqlite-journal
+data/exports/*.csv
+data/cities.csv
+
+# Logs
+logs/*.log
+logs/*.jsonl
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+
+AGENT_RULES.md
+manual.md
+

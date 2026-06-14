@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Organizations</h1>
+<p class="hint">Discovered religious organizations. Showing the most recent 200.</p>
+<table>
+  <thead><tr><th>ID</th><th>Name</th><th>City</th><th>Country</th><th>Religion</th><th>Website</th><th>Emails</th></tr></thead>
+  <tbody>
+  {% for o in orgs %}
+    <tr>
+      <td>{{ o.id }}</td>
+      <td>{{ o.name }}</td>
+      <td>{{ o.city or '' }}</td>
+      <td>{{ o.country or '' }}</td>
+      <td>{{ o.religion or '' }}</td>
+      <td>{% if o.website %}<a href="{{ o.website }}" target="_blank" rel="noopener">link</a>{% endif %}</td>
+      <td>{{ o.contacts }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="7" class="muted">No organizations yet. Run discovery (needs a Places API key) or import a CSV.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,182 @@
+﻿Continent,Country,Code,Language,City_1,City_2,City_3,City_4,City_5,City_6,City_7,City_8,Notes
+Europe,Czechia,cs,Czech,Prague,Brno,Ostrava,Plzeň,Liberec,Olomouc,Ústí nad Labem,Hradec Králové,
+Europe,Belgium,nl,Dutch,Antwerp,Ghent,Bruges,Leuven,Mechelen,Aalst,Hasselt,Sint-Niklaas,Official in Flanders & Brussels
+Europe,Netherlands,nl,Dutch,Amsterdam,Rotterdam,The Hague,Utrecht,Eindhoven,Groningen,Tilburg,Almere,
+Europe,Ireland,en,English,Dublin,Cork,Limerick,Galway,Waterford,Drogheda,Dundalk,Swords,
+Europe,Malta,en,English,Valletta,Birkirkara,Mosta,Qormi,Żabbar,Sliema,San Ġwann,Naxxar,Co-official with Maltese
+Europe,United Kingdom,en,English,London,Birmingham,Manchester,Leeds,Glasgow,Liverpool,Newcastle,Sheffield,De facto official
+Europe,Belgium,fr,French,Brussels,Charleroi,Liège,Namur,Mons,La Louvière,Tournai,Verviers,Official in Wallonia & Brussels
+Europe,France,fr,French,Paris,Marseille,Lyon,Toulouse,Nice,Nantes,Strasbourg,Montpellier,
+Europe,Luxembourg,fr,French,Luxembourg City,Esch-sur-Alzette,Differdange,Dudelange,Ettelbruck,Diekirch,Wiltz,Echternach,
+Europe,Monaco,fr,French,Monaco,Monte Carlo,La Condamine,Fontvieille,Moneghetti,Larvotto,La Rousse,Saint-Roman,Quartiers listed (city-state)
+Europe,Switzerland,fr,French,Geneva,Lausanne,Zürich,Bern,Basel,Fribourg,Neuchâtel,Sion,One of 4 national languages
+Europe,Austria,de,German,Vienna,Graz,Linz,Salzburg,Innsbruck,Klagenfurt,Villach,Wels,
+Europe,Belgium,de,German,Eupen,Sankt Vith,Kelmis,Raeren,Büllingen,Amel,Bütgenbach,Burg-Reuland,Official in German-speaking Community
+Europe,Germany,de,German,Berlin,Hamburg,Munich,Cologne,Frankfurt,Stuttgart,Düsseldorf,Dortmund,
+Europe,Liechtenstein,de,German,Vaduz,Schaan,Triesen,Balzers,Eschen,Mauren,Triesenberg,Ruggell,
+Europe,Luxembourg,de,German,Luxembourg City,Esch-sur-Alzette,Differdange,Dudelange,Ettelbruck,Diekirch,Wiltz,Echternach,One of 3 official languages
+Europe,Switzerland,de,German,Zürich,Geneva,Basel,Bern,Lausanne,Winterthur,Lucerne,St. Gallen,One of 4 national languages
+Europe,Italy,it,Italian,Rome,Milan,Naples,Turin,Palermo,Genoa,Bologna,Florence,
+Europe,San Marino,it,Italian,San Marino,Serravalle,Borgo Maggiore,Domagnano,Fiorentino,Acquaviva,Faetano,Chiesanuova,
+Europe,Switzerland,it,Italian,Lugano,Bellinzona,Locarno,Mendrisio,Chiasso,Biasca,Giubiasco,Massagno,Official in Ticino & Grisons
+Europe,Poland,pl,Polish,Warsaw,Kraków,Łódź,Wrocław,Poznań,Gdańsk,Szczecin,Bydgoszcz,
+Europe,Portugal,pt,Portuguese,Lisbon,Porto,Vila Nova de Gaia,Amadora,Braga,Coimbra,Funchal,Setúbal,
+Europe,Belarus,ru,Russian,Minsk,Gomel,Mogilev,Vitebsk,Hrodna,Brest,Babruysk,Baranavichy,Co-official with Belarusian
+Europe,Russia,ru,Russian,Moscow,Saint Petersburg,Novosibirsk,Yekaterinburg,Kazan,Nizhny Novgorod,Chelyabinsk,Samara,Transcontinental
+Europe,Slovakia,sk,Slovak,Bratislava,Košice,Prešov,Žilina,Nitra,Banská Bystrica,Trnava,Trenčín,
+Europe,Spain,es,Spanish,Madrid,Barcelona,Valencia,Seville,Zaragoza,Málaga,Murcia,Palma,
+Europe,Cyprus,tr,Turkish,Nicosia,Limassol,Larnaca,Famagusta,Paphos,Kyrenia,Morphou,Aradippou,Co-official with Greek
+Europe,Ukraine,uk,Ukrainian,Kyiv,Kharkiv,Odesa,Dnipro,Donetsk,Zaporizhzhia,Lviv,Kryvyi Rih,
+North America,Antigua and Barbuda,en,English,St. John's,All Saints,Liberta,Potter's Village,Bolans,Swetes,Codrington,Parham,
+North America,Bahamas,en,English,Nassau,Freeport,Lucaya,West End,Coopers Town,Marsh Harbour,Freetown,High Rock,
+North America,Barbados,en,English,Bridgetown,Speightstown,Oistins,Bathsheba,Holetown,Crane,Blackmans,Crab Hill,
+North America,Belize,en,English,Belize City,San Ignacio,Orange Walk,Belmopan,Dangriga,Corozal,San Pedro,Benque Viejo,
+North America,Canada,en,English,Toronto,Montreal,Vancouver,Calgary,Edmonton,Ottawa,Winnipeg,Mississauga,Co-official with French
+North America,Dominica,en,English,Roseau,Portsmouth,Marigot,Berekua,Mahaut,Saint Joseph,Wesley,Salisbury,
+North America,Grenada,en,English,St. George's,Gouyave,Grenville,Victoria,Sauteurs,Hillsborough,Grand Roy,Saint David's,
+North America,Jamaica,en,English,Kingston,Spanish Town,Portmore,Montego Bay,May Pen,Mandeville,Old Harbour,Savanna-la-Mar,
+North America,Saint Kitts and Nevis,en,English,Basseterre,Charlestown,Fig Tree,Market Shop,Saint Paul's,Middle Island,Nicola Town,Trinity,
+North America,Saint Lucia,en,English,Castries,Bisée,Vieux Fort,Micoud,Soufrière,Gros Islet,Dennery,Laborie,
+North America,Saint Vincent and the Grenadines,en,English,Kingstown,Kingstown Park,Georgetown,Byera,Biabou,Port Elizabeth,Chateaubelair,Layou,
+North America,Trinidad and Tobago,en,English,Port of Spain,San Fernando,Chaguanas,Arima,Point Fortin,Scarborough,Couva,Sangre Grande,
+North America,United States,en,English,New York,Los Angeles,Chicago,Houston,Phoenix,Philadelphia,San Antonio,San Diego,
+North America,Canada,fr,French,Montreal,Quebec City,Laval,Gatineau,Longueuil,Sherbrooke,Trois-Rivières,Lévis,Co-official; Québec cities listed
+North America,Haiti,fr,French,Port-au-Prince,Carrefour,Delmas,Pétion-Ville,Cap-Haïtien,Gonaïves,Saint-Marc,Les Cayes,Co-official with Haitian Creole
+North America,Costa Rica,es,Spanish,San José,Limón,Alajuela,Liberia,Puntarenas,Heredia,Cartago,San Francisco,
+North America,Cuba,es,Spanish,Havana,Santiago de Cuba,Camagüey,Holguín,Guantánamo,Santa Clara,Bayamo,Las Tunas,
+North America,Dominican Republic,es,Spanish,Santo Domingo,Santiago,Santo Domingo Este,San Pedro de Macorís,La Romana,San Cristóbal,Puerto Plata,San Francisco de Macorís,
+North America,El Salvador,es,Spanish,San Salvador,Soyapango,Santa Ana,San Miguel,Mejicanos,Apopa,Delgado,Santa Tecla,
+North America,Guatemala,es,Spanish,Guatemala City,Mixco,Villa Nueva,Quetzaltenango,Escuintla,Petapa,San Juan Sacatepéquez,Villa Canales,
+North America,Honduras,es,Spanish,Tegucigalpa,San Pedro Sula,Choloma,La Ceiba,El Progreso,Choluteca,Comayagua,Puerto Cortés,
+North America,Mexico,es,Spanish,Mexico City,Guadalajara,Monterrey,Puebla,Tijuana,León,Juárez,Zapopan,
+North America,Nicaragua,es,Spanish,Managua,León,Masaya,Chinandega,Matagalpa,Estelí,Granada,Jinotega,
+North America,Panama,es,Spanish,Panama City,San Miguelito,Tocumen,David,Arraiján,Colón,Las Cumbres,La Chorrera,
+South America,Suriname,nl,Dutch,Paramaribo,Lelydorp,Nieuw Nickerie,Moengo,Nieuw Amsterdam,Mariënburg,Wageningen,Albina,
+South America,Guyana,en,English,Georgetown,Linden,New Amsterdam,Anna Regina,Bartica,Skeldon,Rosignol,Mahaica,
+South America,Brazil,pt,Portuguese,São Paulo,Rio de Janeiro,Brasília,Salvador,Fortaleza,Belo Horizonte,Manaus,Curitiba,
+South America,Argentina,es,Spanish,Buenos Aires,Córdoba,Rosario,Mendoza,La Plata,San Miguel de Tucumán,Mar del Plata,Salta,
+South America,Bolivia,es,Spanish,Santa Cruz de la Sierra,El Alto,La Paz,Cochabamba,Oruro,Sucre,Tarija,Potosí,
+South America,Chile,es,Spanish,Santiago,Valparaíso,Concepción,La Serena,Antofagasta,Temuco,Rancagua,Talca,
+South America,Colombia,es,Spanish,Bogotá,Medellín,Cali,Barranquilla,Cartagena,Cúcuta,Bucaramanga,Soledad,
+South America,Ecuador,es,Spanish,Guayaquil,Quito,Cuenca,Santo Domingo,Machala,Durán,Manta,Portoviejo,
+South America,Paraguay,es,Spanish,Asunción,Ciudad del Este,San Lorenzo,Luque,Capiatá,Lambaré,Fernando de la Mora,Limpio,Co-official with Guaraní
+South America,Peru,es,Spanish,Lima,Arequipa,Trujillo,Chiclayo,Piura,Cusco,Huancayo,Iquitos,
+South America,Uruguay,es,Spanish,Montevideo,Salto,Ciudad de la Costa,Paysandú,Las Piedras,Rivera,Maldonado,Tacuarembó,
+South America,Venezuela,es,Spanish,Caracas,Maracaibo,Valencia,Barquisimeto,Maracay,Ciudad Guayana,Maturín,Barcelona,
+Asia,Bahrain,ar,Arabic,Manama,Riffa,Muharraq,Hamad Town,A'ali,Isa Town,Sitra,Budaiya,
+Asia,Iraq,ar,Arabic,Baghdad,Basra,Mosul,Erbil,Kirkuk,Najaf,Karbala,Nasiriyah,Co-official with Kurdish
+Asia,Jordan,ar,Arabic,Amman,Zarqa,Irbid,Russeifa,Aqaba,Salt,Madaba,Mafraq,
+Asia,Kuwait,ar,Arabic,Kuwait City,Al Ahmadi,Hawalli,As Salimiyah,Sabah as Salim,Al Farwaniyah,Al Jahra,Al Fahahil,
+Asia,Lebanon,ar,Arabic,Beirut,Tripoli,Sidon,Tyre,Zahlé,Jounieh,Baalbek,Byblos,
+Asia,Oman,ar,Arabic,Muscat,Seeb,Salalah,Bawshar,Sohar,As Suwayq,Sur,Nizwa,
+Asia,Palestine,ar,Arabic,Gaza,Hebron,East Jerusalem,Nablus,Khan Yunis,Rafah,Ramallah,Bethlehem,
+Asia,Qatar,ar,Arabic,Doha,Al Rayyan,Al Wakrah,Al Khor,Umm Salal,Al Daayen,Dukhan,Mesaieed,
+Asia,Saudi Arabia,ar,Arabic,Riyadh,Jeddah,Mecca,Medina,Dammam,Ta'if,Tabuk,Khamis Mushait,
+Asia,Syria,ar,Arabic,Damascus,Aleppo,Homs,Latakia,Hama,Raqqa,Deir ez-Zor,Al-Hasakah,
+Asia,United Arab Emirates,ar,Arabic,Dubai,Abu Dhabi,Sharjah,Al Ain,Ajman,Ras al-Khaimah,Fujairah,Umm al-Quwain,
+Asia,Yemen,ar,Arabic,Sana'a,Aden,Taiz,Al Hudaydah,Mukalla,Ibb,Dhamar,Amran,
+Asia,Bangladesh,bn,Bengali,Dhaka,Chittagong,Khulna,Rajshahi,Sylhet,Mymensingh,Rangpur,Barisal,
+Asia,India,bn,Bengali,Kolkata,Asansol,Siliguri,Durgapur,Bardhaman,Malda,Baharampur,Habra,Official in West Bengal & Tripura
+Asia,China,zh,Chinese,Shanghai,Beijing,Chongqing,Guangzhou,Shenzhen,Tianjin,Chengdu,Wuhan,
+Asia,Singapore,zh,Chinese,Singapore,Jurong,Woodlands,Tampines,Bedok,Yishun,Hougang,Ang Mo Kio,City-state; one of 4 official langs
+Asia,Taiwan,zh,Chinese,Taipei,New Taipei,Taichung,Kaohsiung,Tainan,Taoyuan,Hsinchu,Keelung,Politically disputed status
+Asia,India,en,English,Delhi,Mumbai,Bangalore,Hyderabad,Ahmedabad,Chennai,Kolkata,Surat,Subsidiary/associate official language
+Asia,Pakistan,en,English,Karachi,Lahore,Faisalabad,Rawalpindi,Gujranwala,Peshawar,Multan,Islamabad,Official language
+Asia,Philippines,en,English,Quezon City,Manila,Davao,Caloocan,Cebu City,Zamboanga,Taguig,Antipolo,Co-official with Filipino
+Asia,Singapore,en,English,Singapore,Jurong,Woodlands,Tampines,Bedok,Yishun,Hougang,Ang Mo Kio,Main administrative language; city-state
+Asia,Israel,he,Hebrew,Jerusalem,Tel Aviv,Haifa,Rishon LeZion,Petah Tikva,Ashdod,Netanya,Beersheba,Arabic has special status
+Asia,India,hi,Hindi,Delhi,Mumbai,Bangalore,Hyderabad,Ahmedabad,Chennai,Kolkata,Surat,Official language of the Union
+Asia,Indonesia,id,Indonesian,Jakarta,Surabaya,Bandung,Medan,Bekasi,Depok,Tangerang,Semarang,
+Asia,Japan,ja,Japanese,Tokyo,Yokohama,Osaka,Nagoya,Sapporo,Fukuoka,Kobe,Kyoto,
+Asia,North Korea,ko,Korean,Pyongyang,Hamhung,Chongjin,Nampo,Wonsan,Sinuiju,Tanchon,Kaesong,
+Asia,South Korea,ko,Korean,Seoul,Busan,Incheon,Daegu,Daejeon,Gwangju,Suwon,Ulsan,
+Asia,Brunei,ms,Malay,Bandar Seri Begawan,Kuala Belait,Seria,Tutong,Bangar,Muara,Sengkurong,Berakas,
+Asia,Malaysia,ms,Malay,Kuala Lumpur,George Town,Ipoh,Johor Bahru,Shah Alam,Petaling Jaya,Kuching,Kota Kinabalu,
+Asia,Singapore,ms,Malay,Singapore,Jurong,Woodlands,Tampines,Bedok,Yishun,Hougang,Ang Mo Kio,National language; city-state
+Asia,India,ne,Nepali,Gangtok,Namchi,Gyalshing,Singtam,Rangpo,Jorethang,Mangan,Nayabazar,Official in Sikkim
+Asia,Nepal,ne,Nepali,Kathmandu,Pokhara,Lalitpur,Bharatpur,Biratnagar,Birgunj,Dharan,Butwal,
+Asia,Timor-Leste,pt,Portuguese,Dili,Baucau,Maliana,Suai,Liquiçá,Aileu,Same,Ainaro,Co-official with Tetum
+Asia,Kazakhstan,ru,Russian,Almaty,Astana,Shymkent,Karaganda,Aktobe,Taraz,Pavlodar,Öskemen,Official in state institutions
+Asia,Kyrgyzstan,ru,Russian,Bishkek,Osh,Jalal-Abad,Karakol,Tokmok,Kara-Balta,Naryn,Talas,Official language
+Asia,Tajikistan,ru,Russian,Dushanbe,Khujand,Bokhtar,Kulob,Istaravshan,Tursunzoda,Konibodom,Vahdat,Language of interethnic communication
+Asia,Thailand,th,Thai,Bangkok,Nonthaburi,Nakhon Ratchasima,Chiang Mai,Hat Yai,Udon Thani,Pak Kret,Khon Kaen,
+Asia,Turkey,tr,Turkish,Istanbul,Ankara,İzmir,Bursa,Adana,Gaziantep,Konya,Antalya,Transcontinental
+Asia,India,ur,Urdu,Srinagar,Jammu,Anantnag,Baramulla,Sopore,Kupwara,Udhampur,Kathua,Official in J&K & several states
+Asia,Pakistan,ur,Urdu,Karachi,Lahore,Faisalabad,Rawalpindi,Gujranwala,Peshawar,Multan,Islamabad,National language
+Asia,Vietnam,vi,Vietnamese,Ho Chi Minh City,Hanoi,Hai Phong,Da Nang,Can Tho,Bien Hoa,Hue,Nha Trang,
+Oceania,Australia,en,English,Sydney,Melbourne,Brisbane,Perth,Adelaide,Gold Coast,Canberra,Newcastle,De facto national language
+Oceania,Fiji,en,English,Suva,Lautoka,Nadi,Nausori,Labasa,Ba,Levuka,Sigatoka,With iTaukei & Fiji Hindi
+Oceania,Kiribati,en,English,South Tarawa,Betio,Bikenibeu,Bairiki,Teaoraereke,Eita,Bonriki,Temaiku,Co-official with Gilbertese
+Oceania,Marshall Islands,en,English,Majuro,Ebeye,Jabor,Wotje,Rita,Laura,Mejit,Jaluit,Co-official with Marshallese
+Oceania,Micronesia (FSM),en,English,Weno,Palikir,Kolonia,Tofol,Colonia,Nett,Sapwuahfik,Lelu,
+Oceania,Nauru,en,English,Yaren,Denigomodu,Aiwo,Boe,Meneng,Anabar,Baiti,Buada,Districts listed
+Oceania,New Zealand,en,English,Auckland,Wellington,Christchurch,Hamilton,Tauranga,Lower Hutt,Dunedin,Palmerston North,De facto; Māori & NZSL official
+Oceania,Palau,en,English,Koror,Ngerulmud,Meyungs,Airai,Kloulklubed,Ngerkebesang,Ngardmau,Melekeok,Co-official with Palauan
+Oceania,Papua New Guinea,en,English,Port Moresby,Lae,Mount Hagen,Madang,Wewak,Goroka,Kokopo,Kimbe,With Tok Pisin & Hiri Motu
+Oceania,Samoa,en,English,Apia,Asau,Mulifanua,Faleula,Siusega,Vaitele,Vailele,Safotu,Co-official with Samoan
+Oceania,Solomon Islands,en,English,Honiara,Auki,Gizo,Buala,Tulagi,Kirakira,Lata,Tigoa,
+Oceania,Tonga,en,English,Nukuʻalofa,Neiafu,Haveluloto,Vaini,Pangai,Ohonua,Hihifo,Kolonga,Co-official with Tongan
+Oceania,Tuvalu,en,English,Funafuti,Asau,Tanrake,Savave,Kulia,Toga,Tonga,Fangaua,Co-official with Tuvaluan
+Oceania,Vanuatu,en,English,Port Vila,Luganville,Norsup,Isangel,Sola,Lakatoro,Saratamata,Lenakel,With French & Bislama
+Oceania,Vanuatu,fr,French,Port Vila,Luganville,Norsup,Isangel,Sola,Lakatoro,Saratamata,Lenakel,With English & Bislama
+Oceania,Fiji,hi,Hindi,Suva,Lautoka,Nadi,Nausori,Labasa,Ba,Levuka,Sigatoka,Fiji Hindi is official
+Africa,Algeria,ar,Arabic,Algiers,Oran,Constantine,Annaba,Blida,Batna,Sétif,Djelfa,With Tamazight
+Africa,Chad,ar,Arabic,N'Djamena,Moundou,Sarh,Abéché,Kélo,Koumra,Pala,Am Timan,Co-official with French
+Africa,Comoros,ar,Arabic,Moroni,Mutsamudu,Fomboni,Domoni,Tsimbeo,Adda-Douéni,Mitsamiouli,Ouani,With French & Comorian
+Africa,Djibouti,ar,Arabic,Djibouti City,Ali Sabieh,Tadjoura,Obock,Dikhil,Arta,Holhol,Goubetto,Co-official with French
+Africa,Egypt,ar,Arabic,Cairo,Alexandria,Giza,Shubra El Kheima,Port Said,Suez,Luxor,Mansoura,
+Africa,Eritrea,ar,Arabic,Asmara,Keren,Massawa,Assab,Mendefera,Barentu,Adi Keih,Dekemhare,Working language (no official designated)
+Africa,Libya,ar,Arabic,Tripoli,Benghazi,Misrata,Bayda,Zawiya,Khoms,Tobruk,Sabha,
+Africa,Mauritania,ar,Arabic,Nouakchott,Nouadhibou,Néma,Kaédi,Rosso,Zouérat,Atar,Kiffa,
+Africa,Morocco,ar,Arabic,Casablanca,Rabat,Fez,Marrakesh,Tangier,Meknes,Salé,Agadir,With Tamazight
+Africa,Somalia,ar,Arabic,Mogadishu,Hargeisa,Bosaso,Galkayo,Kismayo,Berbera,Baidoa,Marka,Co-official with Somali
+Africa,Sudan,ar,Arabic,Khartoum,Omdurman,Khartoum North,Nyala,Port Sudan,Kassala,El Obeid,Gedaref,Co-official with English
+Africa,Tunisia,ar,Arabic,Tunis,Sfax,Sousse,Kairouan,Bizerte,Gabès,Ariana,Gafsa,
+Africa,Botswana,en,English,Gaborone,Francistown,Molepolole,Maun,Serowe,Selibe Phikwe,Kanye,Mochudi,With Setswana
+Africa,Cameroon,en,English,Bamenda,Buea,Limbe,Kumba,Mamfe,Tiko,Mutengene,Nkambe,Official in NW/SW regions
+Africa,Eswatini,en,English,Mbabane,Manzini,Big Bend,Malkerns,Nhlangano,Siteki,Hluti,Piggs Peak,Co-official with Swazi
+Africa,Ghana,en,English,Accra,Kumasi,Tamale,Sekondi-Takoradi,Ashaiman,Sunyani,Cape Coast,Obuasi,
+Africa,Kenya,en,English,Nairobi,Mombasa,Nakuru,Eldoret,Kisumu,Ruiru,Kikuyu,Thika,Co-official with Swahili
+Africa,Lesotho,en,English,Maseru,Teyateyaneng,Mafeteng,Hlotse,Mohale's Hoek,Maputsoe,Qacha's Nek,Quthing,Co-official with Sesotho
+Africa,Liberia,en,English,Monrovia,Gbarnga,Buchanan,Ganta,Kakata,Voinjama,Zwedru,Harper,
+Africa,Malawi,en,English,Lilongwe,Blantyre,Mzuzu,Zomba,Karonga,Kasungu,Mangochi,Nkhotakota,With Chichewa
+Africa,Mauritius,en,English,Port Louis,Beau Bassin-Rose Hill,Vacoas-Phoenix,Curepipe,Quatre Bornes,Triolet,Goodlands,Centre de Flacq,De facto (no de jure official)
+Africa,Namibia,en,English,Windhoek,Rundu,Walvis Bay,Oshakati,Swakopmund,Katima Mulilo,Grootfontein,Rehoboth,
+Africa,Nigeria,en,English,Lagos,Kano,Ibadan,Abuja,Port Harcourt,Benin City,Kaduna,Maiduguri,
+Africa,Rwanda,en,English,Kigali,Butare,Gitarama,Ruhengeri,Gisenyi,Byumba,Cyangugu,Kibuye,One of 4 official languages
+Africa,Seychelles,en,English,Victoria,Anse Boileau,Beau Vallon,Takamaka,Bel Ombre,Cascade,Port Glaud,Anse Royale,With French & Seselwa Creole
+Africa,Sierra Leone,en,English,Freetown,Bo,Kenema,Makeni,Koidu,Lunsar,Port Loko,Waterloo,
+Africa,South Africa,en,English,Johannesburg,Cape Town,Durban,Pretoria,Gqeberha,Bloemfontein,East London,Pietermaritzburg,One of 12 official languages
+Africa,South Sudan,en,English,Juba,Wau,Malakal,Yei,Aweil,Bentiu,Bor,Rumbek,
+Africa,Sudan,en,English,Khartoum,Omdurman,Khartoum North,Nyala,Port Sudan,Kassala,El Obeid,Gedaref,Co-official with Arabic
+Africa,Tanzania,en,English,Dar es Salaam,Mwanza,Dodoma,Arusha,Mbeya,Morogoro,Tanga,Zanzibar City,With Swahili (primary)
+Africa,The Gambia,en,English,Banjul,Serekunda,Brikama,Bakau,Farafenni,Lamin,Sukuta,Basse Santa Su,
+Africa,Uganda,en,English,Kampala,Nansana,Kira,Mbarara,Mukono,Gulu,Lugazi,Masaka,Co-official with Swahili
+Africa,Zambia,en,English,Lusaka,Kitwe,Ndola,Kabwe,Chingola,Mufulira,Livingstone,Luanshya,
+Africa,Zimbabwe,en,English,Harare,Bulawayo,Chitungwiza,Mutare,Gweru,Epworth,Kwekwe,Kadoma,One of 16 official languages
+Africa,Benin,fr,French,Cotonou,Abomey-Calavi,Porto-Novo,Parakou,Djougou,Bohicon,Kandi,Natitingou,
+Africa,Burkina Faso,fr,French,Ouagadougou,Bobo-Dioulasso,Koudougou,Banfora,Ouahigouya,Kaya,Tenkodogo,Fada N'Gourma,Working language since 2024 (no longer official)
+Africa,Burundi,fr,French,Bujumbura,Gitega,Muyinga,Ruyigi,Ngozi,Rumonge,Kayanza,Bururi,With Kirundi & English
+Africa,Cameroon,fr,French,Douala,Yaoundé,Garoua,Bamenda,Maroua,Bafoussam,Ngaoundéré,Bertoua,Co-official with English
+Africa,Central African Republic,fr,French,Bangui,Bimbo,Berbérati,Carnot,Bambari,Bouar,Bossangoa,Bria,Co-official with Sango
+Africa,Côte d'Ivoire,fr,French,Abidjan,Bouaké,Daloa,Yamoussoukro,San-Pédro,Korhogo,Man,Divo,
+Africa,DR Congo,fr,French,Kinshasa,Lubumbashi,Mbuji-Mayi,Kananga,Kisangani,Bukavu,Tshikapa,Kolwezi,
+Africa,Equatorial Guinea,fr,French,Malabo,Bata,Ebebiyín,Aconibe,Añisoc,Luba,Evinayong,Mongomo,Co-official
+Africa,Gabon,fr,French,Libreville,Port-Gentil,Franceville,Oyem,Moanda,Mouila,Lambaréné,Tchibanga,
+Africa,Guinea,fr,French,Conakry,Nzérékoré,Kindia,Kankan,Kissidougou,Labé,Mamou,Boké,
+Africa,Madagascar,fr,French,Antananarivo,Toamasina,Antsirabe,Fianarantsoa,Mahajanga,Toliara,Antsiranana,Ambovombe,Co-official with Malagasy
+Africa,Mali,fr,French,Bamako,Sikasso,Mopti,Koutiala,Ségou,Kayes,Gao,Kati,Working language since 2023 (no longer official)
+Africa,Mauritius,fr,French,Port Louis,Beau Bassin-Rose Hill,Vacoas-Phoenix,Curepipe,Quatre Bornes,Triolet,Goodlands,Centre de Flacq,De facto (no de jure official)
+Africa,Niger,fr,French,Niamey,Zinder,Maradi,Agadez,Tahoua,Dosso,Birni N'Konni,Tessaoua,Working language since 2024 (no longer official)
+Africa,Republic of the Congo,fr,French,Brazzaville,Pointe-Noire,Dolisie,Nkayi,Ouesso,Owando,Madingou,Gamboma,
+Africa,Rwanda,fr,French,Kigali,Butare,Gitarama,Ruhengeri,Gisenyi,Byumba,Cyangugu,Kibuye,One of 4 official languages
+Africa,Senegal,fr,French,Dakar,Touba,Thiès,Rufisque,Kaolack,Mbour,Saint-Louis,Ziguinchor,
+Africa,Seychelles,fr,French,Victoria,Anse Boileau,Beau Vallon,Takamaka,Bel Ombre,Cascade,Port Glaud,Anse Royale,With English & Seselwa Creole
+Africa,Togo,fr,French,Lomé,Sokodé,Kara,Kpalimé,Atakpamé,Dapaong,Tsévié,Aného,
+Africa,Angola,pt,Portuguese,Luanda,Huambo,Lobito,Benguela,Lubango,Cabinda,Malanje,Namibe,
+Africa,Cape Verde,pt,Portuguese,Praia,Mindelo,Santa Maria,Assomada,Pedra Badejo,São Filipe,Tarrafal,Espargos,
+Africa,Equatorial Guinea,pt,Portuguese,Malabo,Bata,Ebebiyín,Aconibe,Añisoc,Luba,Evinayong,Mongomo,Co-official
+Africa,Guinea-Bissau,pt,Portuguese,Bissau,Bafatá,Gabú,Bissorã,Bolama,Cacheu,Bubaque,Catió,
+Africa,Mozambique,pt,Portuguese,Maputo,Matola,Nampula,Beira,Chimoio,Nacala,Quelimane,Tete,
+Africa,São Tomé and Príncipe,pt,Portuguese,São Tomé,Santo Amaro,Neves,Santana,Trindade,Guadalupe,Santo António,São João dos Angolares,
+Africa,Equatorial Guinea,es,Spanish,Malabo,Bata,Ebebiyín,Aconibe,Añisoc,Luba,Evinayong,Mongomo,

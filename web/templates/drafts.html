@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Drafts — review queue</h1>
+<p class="filters">
+  <a href="/drafts" class="{{ 'active' if not status else '' }}">All</a>
+  <a href="/drafts?status=draft" class="{{ 'active' if status == 'draft' else '' }}">Draft</a>
+  <a href="/drafts?status=approved" class="{{ 'active' if status == 'approved' else '' }}">Approved</a>
+  <a href="/drafts?status=sent" class="{{ 'active' if status == 'sent' else '' }}">Sent</a>
+  <a href="/drafts?status=rejected" class="{{ 'active' if status == 'rejected' else '' }}">Rejected</a>
+</p>
+
+{% for d in drafts %}
+<article class="draft">
+  <div class="draft-head">
+    <div>
+      <span class="tag tag-{{ d.status }}">{{ d.status }}</span>
+      {% if d.fallback %}<span class="tag warn">template fallback</span>{% endif %}
+      <b>#{{ d.id }} · {{ d.org }}</b>
+      <span class="muted">→ {{ d.email }}</span>
+    </div>
+    <div class="draft-actions">
+      <form method="post" action="/drafts/{{ d.id }}/approve"><button class="ok">Approve</button></form>
+      <form method="post" action="/drafts/{{ d.id }}/reject"><button class="danger">Reject</button></form>
+      <form method="post" action="/suppress"><input type="hidden" name="email" value="{{ d.email }}"><button>Suppress</button></form>
+    </div>
+  </div>
+  <div class="draft-subject">{{ d.subject }}</div>
+  <pre class="draft-body">{{ d.body }}</pre>
+</article>
+{% else %}
+<p class="muted">No drafts in this view.</p>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Infinity Outreach — Control Panel</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">∞ Infinity Outreach</div>
+    <nav>
+      <a href="/" class="{{ 'active' if page == 'dashboard' else '' }}">Dashboard</a>
+      <a href="/settings" class="{{ 'active' if page == 'settings' else '' }}">Campaign Setup</a>
+      <a href="/organizations" class="{{ 'active' if page == 'organizations' else '' }}">Organizations</a>
+      <a href="/drafts" class="{{ 'active' if page == 'drafts' else '' }}">Drafts</a>
+      <a href="/logs" class="{{ 'active' if page == 'logs' else '' }}">Logs</a>
+    </nav>
+  </header>
+
+  <main>
+    {% if msg %}<div class="flash">{{ msg }}</div>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <span>Local-first outreach engine · draft-first by default · honours the opt-out list</span>
+  </footer>
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Logs</h1>
+
+<section class="panel">
+  <h2>Task runs</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Task</th><th>Status</th><th>Started</th><th>Finished</th><th>Details</th></tr></thead>
+    <tbody>
+    {% for r in runs %}
+      <tr>
+        <td>{{ r.id }}</td><td>{{ r.task }}</td>
+        <td><span class="tag">{{ r.status }}</span></td>
+        <td>{{ r.started.strftime('%Y-%m-%d %H:%M') if r.started else '' }}</td>
+        <td>{{ r.finished.strftime('%Y-%m-%d %H:%M') if r.finished else '' }}</td>
+        <td>{{ r.details or '' }}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="6" class="muted">No task runs yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="panel">
+  <h2>Sent log</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Email</th><th>Sent at</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for x in sent %}
+      <tr>
+        <td>{{ x.id }}</td><td>{{ x.email }}</td>
+        <td>{{ x.sent_at.strftime('%Y-%m-%d %H:%M') if x.sent_at else '' }}</td>
+        <td><span class="tag tag-sent">{{ x.status }}</span></td>
+      </tr>
+    {% else %}
+      <tr><td colspan="4" class="muted">Nothing sent yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
