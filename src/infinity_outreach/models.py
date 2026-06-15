@@ -163,6 +163,18 @@ class TaskRun(Base):
     details: Mapped[str | None] = mapped_column(Text, default=None)
 
 
+class ApiCallLog(Base):
+    """Lightweight log of every Google Places API call for budget guardrails."""
+
+    __tablename__ = "api_call_log"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    service: Mapped[str] = mapped_column(String(50), index=True)
+    endpoint: Mapped[str] = mapped_column(String(100))
+    called_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, index=True)
+    response_status: Mapped[str | None] = mapped_column(String(20), default=None)
+
+
 class CampaignSetting(Base, TimestampMixin):
     """Singleton (id=1) holding the live campaign configuration.
 

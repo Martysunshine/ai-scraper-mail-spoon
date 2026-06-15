@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
+from datetime import date, datetime, timezone
 
 import requests
 from sqlalchemy import select
@@ -22,7 +23,7 @@ from sqlalchemy.orm import Session
 from .config import get_settings
 from .constants import religion as get_religion
 from .constants import search_queries_for
-from .models import Organization
+from .models import ApiCallLog, Organization
 
 _TEXTSEARCH_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json"
 _DETAILS_URL = "https://maps.googleapis.com/maps/api/place/details/json"
@@ -42,6 +43,17 @@ _SUBTYPE_HINTS = {
 
 class DiscoveryUnavailable(RuntimeError):
     """Raised when discovery cannot run (e.g. no Places API key)."""
+
+
+def _count_calls_today(session: Session) -> int:
+    today = datetime.combine(date.today(), datetime.min.time()).replace(tzinfo=timezone.utc)
+    return session.query(ApiCallLog).filter(ApiCallLog.called_at >= today).count()
+
+
+def _log_calls(session: Session, endpoint: str, n: int = 1, status: str = "OK") -> None:
+    for _ in range(n):
+        session.add(ApiCallLog(service="google_places", endpoint=endpoint, response_status=status))
+    session.flush()
 
 
 @dataclass
@@ -64,14 +76,14 @@ def _subtype_from_query(query: str) -> str | None:
     return None
 
 
-def _place_details(place_id: str, session: requests.Session, api_key: str) -> dict:
+def _place_details(place_id: str, http: requests.Session, api_key: str) -> dict:
     params = {
         "place_id": place_id,
         "fields": "website,formatted_phone_number,formatted_address,name",
         "key": api_key,
     }
     try:
-        resp = session.get(_DETAILS_URL, params=params, timeout=get_settings().request_timeout)
+        resp = http.get(_DETAILS_URL, params=params, timeout=get_settings().request_timeout)
         data = resp.json()
         return data.get("result", {}) if data.get("status") == "OK" else {}
     except (requests.RequestException, ValueError):
@@ -79,15 +91,15 @@ def _place_details(place_id: str, session: requests.Session, api_key: str) -> di
 
 
 def _text_search(
-    query: str, session: requests.Session, api_key: str, *, max_results: int
-) -> list[dict]:
-    """Run a Places text search, following up to two pages of results."""
+    query: str, http: requests.Session, api_key: str, *, max_results: int
+) -> tuple[list[dict], int]:
+    """Run a Places text search, following up to two pages. Returns (results, pages_fetched)."""
     results: list[dict] = []
     params = {"query": query, "key": api_key}
     pages = 0
     while True:
         try:
-            resp = session.get(_TEXTSEARCH_URL, params=params, timeout=get_settings().request_timeout)
+            resp = http.get(_TEXTSEARCH_URL, params=params, timeout=get_settings().request_timeout)
             data = resp.json()
         except (requests.RequestException, ValueError):
             break
@@ -108,7 +120,7 @@ def _text_search(
         time.sleep(2.0)
         params = {"pagetoken": token, "key": api_key}
 
-    return results[:max_results]
+    return results[:max_results], pages
 
 
 def find_organizations(
@@ -117,6 +129,7 @@ def find_organizations(
     religion_key: str,
     *,
     limit: int = 20,
+    db_session: Session | None = None,
 ) -> list[OrgCandidate]:
     """Query Places for one religion in one city and return candidates."""
     settings = get_settings()
@@ -140,14 +153,40 @@ def find_organizations(
     for query in search_queries_for(religion_key, city, country):
         if len(candidates) >= limit:
             break
-        raw = _text_search(query, http, api_key, max_results=limit)
+
+        # --- Guardrail: enforce daily Places API call budget ---
+        if db_session is not None:
+            used = _count_calls_today(db_session)
+            if used >= settings.places_daily_limit:
+                raise DiscoveryUnavailable(
+                    f"Daily Places API limit reached ({used}/{settings.places_daily_limit} calls). "
+                    "Resume tomorrow or raise PLACES_DAILY_LIMIT in .env."
+                )
+
+        raw, pages_fetched = _text_search(query, http, api_key, max_results=limit)
+        if db_session is not None:
+            _log_calls(db_session, "text_search", pages_fetched)
+
         subtype = _subtype_from_query(query)
         for place in raw:
             pid = place.get("place_id")
             if not pid or pid in seen_place_ids:
                 continue
             seen_place_ids.add(pid)
+
+            # --- Guardrail: check again before each Place Details call ---
+            if db_session is not None:
+                used = _count_calls_today(db_session)
+                if used >= settings.places_daily_limit:
+                    raise DiscoveryUnavailable(
+                        f"Daily Places API limit reached ({used}/{settings.places_daily_limit} calls). "
+                        "Resume tomorrow or raise PLACES_DAILY_LIMIT in .env."
+                    )
+
             details = _place_details(pid, http, api_key)
+            if db_session is not None:
+                _log_calls(db_session, "place_details", 1)
+
             candidates.append(
                 OrgCandidate(
                     name=place.get("name", "Unknown"),
@@ -226,7 +265,7 @@ def discover_city(
     total_new = 0
     per_religion = max(1, max_orgs_per_city // max(1, len(religion_keys)))
     for rkey in religion_keys:
-        candidates = find_organizations(city, country, rkey, limit=per_religion)
+        candidates = find_organizations(city, country, rkey, limit=per_religion, db_session=session)
         total_new += save_candidates(
             session, candidates, city=city, country=country, language_code=language_code
         )

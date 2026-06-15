@@ -28,6 +28,13 @@
     <span class="status {{ 'ok' if places_ok else 'warn' }}">Places API: {{ 'configured' if places_ok else 'not set' }}</span>
     <span class="status {{ 'ok' if smtp_ok else 'warn' }}">SMTP / mailbox: {{ 'configured' if smtp_ok else 'not set' }}</span>
   </p>
+  {% set pct = (places_calls_today / places_daily_limit * 100) | int if places_daily_limit > 0 else 0 %}
+  <p>
+    <span class="status {{ 'ok' if pct < 80 else ('warn' if pct < 100 else 'err') }}">
+      Places API calls today: {{ places_calls_today }} / {{ places_daily_limit }}
+      {% if pct >= 100 %} — limit reached, discovery paused{% elif pct >= 80 %} — nearing limit{% endif %}
+    </span>
+  </p>
 </section>
 
 <section class="panel">

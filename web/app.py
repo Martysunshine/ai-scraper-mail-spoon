@@ -21,6 +21,7 @@ for p in (str(ROOT), str(SRC)):
         sys.path.insert(0, p)
 
 from contextlib import asynccontextmanager
+from datetime import date, datetime, timezone
 
 from fastapi import BackgroundTasks, FastAPI, Form, Request
 from fastapi.responses import RedirectResponse
@@ -33,6 +34,7 @@ from infinity_outreach.config import get_settings
 from infinity_outreach.constants import RELIGIONS
 from infinity_outreach.db import init_db, session_scope
 from infinity_outreach.models import (
+    ApiCallLog,
     City,
     Contact,
     EmailDraft,
@@ -78,6 +80,8 @@ def dashboard(request: Request, msg: str = ""):
             "sent_today": sent_today_count(s),
         }
         recent_runs = s.query(TaskRun).order_by(TaskRun.id.desc()).limit(8).all()
+        today_start = datetime.combine(date.today(), datetime.min.time()).replace(tzinfo=timezone.utc)
+        places_calls_today = s.query(ApiCallLog).filter(ApiCallLog.called_at >= today_start).count()
         ctx = {
             "request": request,
             "page": "dashboard",
@@ -88,6 +92,8 @@ def dashboard(request: Request, msg: str = ""):
             "recent_runs": recent_runs,
             "smtp_ok": settings.smtp_configured(),
             "places_ok": settings.places_configured(),
+            "places_calls_today": places_calls_today,
+            "places_daily_limit": settings.places_daily_limit,
         }
     return templates.TemplateResponse(request, "dashboard.html", ctx)
 
@@ -293,6 +299,8 @@ def api_status():
     settings = get_settings()
     with session_scope() as s:
         campaign = campaign_mod.get_campaign(s)
+        today_start = datetime.combine(date.today(), datetime.min.time()).replace(tzinfo=timezone.utc)
+        places_calls_today = s.query(ApiCallLog).filter(ApiCallLog.called_at >= today_start).count()
         return {
             "app": settings.app_name,
             "email_mode": campaign.email_mode,
@@ -304,4 +312,7 @@ def api_status():
             "drafts": s.query(EmailDraft).count(),
             "smtp_configured": settings.smtp_configured(),
             "places_configured": settings.places_configured(),
+            "places_calls_today": places_calls_today,
+            "places_daily_limit": settings.places_daily_limit,
+            "places_calls_remaining": max(0, settings.places_daily_limit - places_calls_today),
         }
