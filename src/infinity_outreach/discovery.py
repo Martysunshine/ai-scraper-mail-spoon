@@ -25,8 +25,12 @@ from .constants import religion as get_religion
 from .constants import search_queries_for
 from .models import ApiCallLog, Organization
 
-_TEXTSEARCH_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json"
-_DETAILS_URL = "https://maps.googleapis.com/maps/api/place/details/json"
+# Places API (New) endpoints — cheaper field-mask billing vs legacy API.
+# Text Search with places.id mask = Essentials tier (~$5/1k vs legacy $32/1k).
+# Place Details with website/phone = Pro tier (~$17/1k, same as legacy).
+_TEXTSEARCH_URL = "https://places.googleapis.com/v1/places:searchText"
+_DETAILS_URL = "https://places.googleapis.com/v1/places/{}"
+_DETAILS_FIELDS = "id,displayName,formattedAddress,nationalPhoneNumber,websiteUri"
 
 # Map a venue search term to a likely religion subtype, for nicer records.
 _SUBTYPE_HINTS = {
@@ -77,50 +81,78 @@ def _subtype_from_query(query: str) -> str | None:
 
 
 def _place_details(place_id: str, http: requests.Session, api_key: str) -> dict:
-    params = {
-        "place_id": place_id,
-        "fields": "website,formatted_phone_number,formatted_address,name",
-        "key": api_key,
+    """Fetch name, address, website, phone for one place. Pro pricing tier."""
+    headers = {
+        "X-Goog-Api-Key": api_key,
+        "X-Goog-FieldMask": _DETAILS_FIELDS,
     }
     try:
-        resp = http.get(_DETAILS_URL, params=params, timeout=get_settings().request_timeout)
+        resp = http.get(
+            _DETAILS_URL.format(place_id),
+            headers=headers,
+            timeout=get_settings().request_timeout,
+        )
+        if resp.status_code == 404:
+            return {}
+        resp.raise_for_status()
         data = resp.json()
-        return data.get("result", {}) if data.get("status") == "OK" else {}
+        return {
+            "name": data.get("displayName", {}).get("text", ""),
+            "formatted_address": data.get("formattedAddress"),
+            "website": data.get("websiteUri"),
+            "phone": data.get("nationalPhoneNumber"),
+        }
     except (requests.RequestException, ValueError):
         return {}
 
 
 def _text_search(
     query: str, http: requests.Session, api_key: str, *, max_results: int
-) -> tuple[list[dict], int]:
-    """Run a Places text search, following up to two pages. Returns (results, pages_fetched)."""
-    results: list[dict] = []
-    params = {"query": query, "key": api_key}
+) -> tuple[list[str], int]:
+    """Text Search (New) returning only place IDs — Essentials tier, cheapest billing.
+
+    Returns (place_id_list, pages_fetched).
+    """
+    place_ids: list[str] = []
+    body: dict = {"textQuery": query, "pageSize": min(20, max_results)}
+    headers = {
+        "X-Goog-Api-Key": api_key,
+        "X-Goog-FieldMask": "places.id",
+        "Content-Type": "application/json",
+    }
     pages = 0
     while True:
         try:
-            resp = http.get(_TEXTSEARCH_URL, params=params, timeout=get_settings().request_timeout)
+            resp = http.post(
+                _TEXTSEARCH_URL,
+                json=body,
+                headers=headers,
+                timeout=get_settings().request_timeout,
+            )
+            if resp.status_code == 403:
+                raise DiscoveryUnavailable(
+                    f"Places API (New) returned 403 — check your API key, billing, and that "
+                    "'Places API (New)' is enabled in Google Cloud: {resp.text}"
+                )
+            resp.raise_for_status()
             data = resp.json()
+        except DiscoveryUnavailable:
+            raise
         except (requests.RequestException, ValueError):
             break
 
-        status = data.get("status")
-        if status not in ("OK", "ZERO_RESULTS"):
-            # e.g. REQUEST_DENIED / OVER_QUERY_LIMIT — stop and surface upstream.
-            raise DiscoveryUnavailable(
-                f"Places API returned status={status}: {data.get('error_message', '')}"
-            )
-
-        results.extend(data.get("results", []))
+        for place in data.get("places", []):
+            pid = place.get("id")
+            if pid:
+                place_ids.append(pid)
         pages += 1
-        token = data.get("next_page_token")
-        if not token or len(results) >= max_results or pages >= 2:
-            break
-        # next_page_token needs a short delay before it becomes valid.
-        time.sleep(2.0)
-        params = {"pagetoken": token, "key": api_key}
 
-    return results[:max_results], pages
+        token = data.get("nextPageToken")
+        if not token or len(place_ids) >= max_results or pages >= 2:
+            break
+        body = {"textQuery": query, "pageSize": 20, "pageToken": token}
+
+    return place_ids[:max_results], pages
 
 
 def find_organizations(
@@ -163,14 +195,13 @@ def find_organizations(
                     "Resume tomorrow or raise PLACES_DAILY_LIMIT in .env."
                 )
 
-        raw, pages_fetched = _text_search(query, http, api_key, max_results=limit)
+        place_ids, pages_fetched = _text_search(query, http, api_key, max_results=limit)
         if db_session is not None:
             _log_calls(db_session, "text_search", pages_fetched)
 
         subtype = _subtype_from_query(query)
-        for place in raw:
-            pid = place.get("place_id")
-            if not pid or pid in seen_place_ids:
+        for pid in place_ids:
+            if pid in seen_place_ids:
                 continue
             seen_place_ids.add(pid)
 
@@ -187,13 +218,14 @@ def find_organizations(
             if db_session is not None:
                 _log_calls(db_session, "place_details", 1)
 
+            name = details.get("name") or "Unknown"
             candidates.append(
                 OrgCandidate(
-                    name=place.get("name", "Unknown"),
+                    name=name,
                     place_id=pid,
-                    address=details.get("formatted_address") or place.get("formatted_address"),
+                    address=details.get("formatted_address"),
                     website=details.get("website"),
-                    phone=details.get("formatted_phone_number"),
+                    phone=details.get("phone"),
                     religion=rel.name,
                     religion_subtype=subtype,
                 )
