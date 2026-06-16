@@ -125,7 +125,7 @@ def run_discovery(
         city.status = "processing"
         session.flush()
         try:
-            new = discovery.discover_city(
+            new, osm_done, google_done = discovery.discover_city_hybrid(
                 session,
                 city=city.city,
                 country=city.country,
@@ -135,8 +135,10 @@ def run_discovery(
             )
             stats.discovered += new
             city.status = "done"
+            city.osm_searched = osm_done
+            city.google_searched = google_done
         except discovery.DiscoveryUnavailable as exc:
-            city.status = "pending"  # leave for a retry once configured
+            city.status = "pending"
             stats.notes.append(str(exc))
             _finish_task(session, run, "error", str(exc))
             return stats

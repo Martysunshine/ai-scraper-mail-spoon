@@ -27,7 +27,7 @@ from sqlalchemy.orm import Session
 
 from .compliance import can_send
 from .config import get_settings
-from .models import Contact, EmailDraft, SentLog
+from .models import Contact, EmailDraft, Organization, SentLog
 
 
 class SenderNotConfigured(RuntimeError):
@@ -157,6 +157,9 @@ def send_draft(
     draft.status = "sent"
     draft.error = None
     _record_send(session, draft=draft, email=email, message_id=message_id, status="sent")
+    org = session.get(Organization, draft.organization_id)
+    if org is not None:
+        org.status = "contacted"
     return SendOutcome(draft.id, email, True, "sent", message_id=message_id)
 
 

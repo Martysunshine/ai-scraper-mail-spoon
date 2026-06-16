@@ -57,6 +57,8 @@ class City(Base, TimestampMixin):
     language_code: Mapped[str | None] = mapped_column(String(8), default=None)
     status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
     notes: Mapped[str | None] = mapped_column(Text, default=None)
+    osm_searched: Mapped[bool] = mapped_column(Boolean, default=False)
+    google_searched: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class Organization(Base, TimestampMixin):

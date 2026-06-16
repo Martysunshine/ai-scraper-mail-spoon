@@ -12,6 +12,27 @@
 </div>
 
 <section class="panel">
+  <h2>Outreach funnel</h2>
+  <div class="cards">
+    <div class="card"><span class="num">{{ metrics.organizations }}</span><span class="lbl">Discovered</span></div>
+    <div class="card"><span class="num">{{ metrics.contacts }}</span><span class="lbl">Emails found</span></div>
+    <div class="card"><span class="num">{{ metrics.drafts }}</span><span class="lbl">Drafted</span></div>
+    <div class="card"><span class="num">{{ metrics.sent_total }}</span><span class="lbl">Sent (all time)</span></div>
+    <div class="card"><span class="num">{{ metrics.orgs_contacted }}</span><span class="lbl">Orgs contacted</span></div>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Discovery sources</h2>
+  <div class="cards">
+    <div class="card"><span class="num">{{ metrics.cities_total }}</span><span class="lbl">Cities total</span></div>
+    <div class="card"><span class="num">{{ metrics.cities_done }}</span><span class="lbl">Cities searched</span></div>
+    <div class="card"><span class="num">{{ metrics.cities_osm }}</span><span class="lbl">Via OSM (free)</span></div>
+    <div class="card"><span class="num">{{ metrics.cities_google }}</span><span class="lbl">Via Google Places</span></div>
+  </div>
+</section>
+
+<section class="panel">
   <h2>Current campaign</h2>
   <ul class="kv">
     <li><b>Religions:</b> {{ campaign.religions | join(', ') if campaign.religions else '—' }}</li>

@@ -60,9 +60,28 @@ def session_scope() -> Iterator[Session]:
         session.close()
 
 
+def _migrate(engine) -> None:
+    """Add columns introduced after initial schema. Safe to run on every boot."""
+    from sqlalchemy import text
+
+    new_columns = [
+        "ALTER TABLE cities ADD COLUMN osm_searched BOOLEAN NOT NULL DEFAULT 0",
+        "ALTER TABLE cities ADD COLUMN google_searched BOOLEAN NOT NULL DEFAULT 0",
+    ]
+    with engine.connect() as conn:
+        for stmt in new_columns:
+            try:
+                conn.execute(text(stmt))
+                conn.commit()
+            except Exception:
+                pass  # column already exists
+
+
 def init_db() -> None:
-    """Create all tables. Safe to run repeatedly."""
+    """Create all tables and apply forward migrations. Safe to run repeatedly."""
     from .models import Base  # imported here to avoid a circular import
 
     ensure_runtime_dirs()
-    Base.metadata.create_all(get_engine())
+    engine = get_engine()
+    Base.metadata.create_all(engine)
+    _migrate(engine)
