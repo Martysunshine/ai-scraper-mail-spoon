@@ -43,4 +43,5 @@ htmlcov/
 # (the leading slash anchors the match to the repo root).
 /AGENT_RULES.md
 /manual.md
+/SETUP_PRIVATE.md
 
