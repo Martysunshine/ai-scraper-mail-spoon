@@ -96,7 +96,9 @@ class SmtpSender:
         else:
             self._server = smtplib.SMTP(self._s.smtp_host, self._s.smtp_port, timeout=30)
             self._server.starttls(context=ctx)
-        self._server.login(self._s.smtp_user, self._s.smtp_password)
+        # Gmail App Passwords are 16 letters; users often paste them with the
+        # display spaces ("abcd efgh ..."). Strip whitespace so login still works.
+        self._server.login(self._s.smtp_user, self._s.smtp_password.replace(" ", ""))
         return self
 
     def __exit__(self, *exc) -> None:
