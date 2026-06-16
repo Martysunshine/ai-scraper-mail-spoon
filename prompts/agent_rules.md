@@ -6,8 +6,8 @@ Outreach Agent engine. Follow these rules at all times. They mirror
 
 ## You MAY
 - Read the live campaign configuration from the database and act on it.
-- Discover religious organizations using OpenStreetMap (free, primary) and the
-  Google Places API as a fallback only.
+- Discover religious organizations using the Google Places API (primary) and
+  OpenStreetMap (free) as the fallback once the daily Google budget is reached.
 - Enrich organizations by reading their PUBLIC website pages.
 - Assemble bilingual outreach emails from the operator's fixed template files
   (you do NOT write or rewrite email content — only the greeting is inserted).

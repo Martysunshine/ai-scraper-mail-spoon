@@ -7,8 +7,9 @@ Uses two OSM services:
 
 Coverage is excellent in Europe, North America, and Australia; acceptable in
 Latin America and South/East Asia; thinner in parts of Africa and Central Asia.
-The hybrid caller (discovery.discover_city_hybrid) falls back to Google Places
-when OSM returns too few results for a city.
+OSM is the free **fallback**: the hybrid caller (discovery.discover_city_hybrid)
+uses Google Places as the primary source and falls back to OSM once the Google
+daily budget is reached (or when no Places API key is configured).
 """
 
 from __future__ import annotations

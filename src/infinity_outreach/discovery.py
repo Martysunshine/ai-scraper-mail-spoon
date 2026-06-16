@@ -325,15 +325,21 @@ def discover_city_hybrid(
     language_code: str | None,
     religion_keys: list[str],
     max_orgs_per_city: int = 20,
-    osm_fallback_threshold: int = 5,
+    fallback_threshold: int = 5,
 ) -> tuple[int, bool, bool]:
-    """Discover organizations using OSM first, Google Places as fallback.
+    """Discover organizations using Google Places first, OSM as the fallback.
+
+    Google Places is the **primary** source — it has the best coverage and most
+    often includes websites and phone numbers. OpenStreetMap (free, no key) is the
+    **fallback**, used when Google is unavailable: no API key, the daily Google
+    budget (PLACES_DAILY_LIMIT) is exhausted, or Google returned too few results
+    for a religion. So discovery runs on Google up to the daily cap, then keeps
+    going for free on OSM.
 
     Flow per religion:
-      1. Always query OSM (free, unlimited).
-      2. If OSM returned fewer than osm_fallback_threshold results AND the
-         Google Places daily budget is not exhausted, also query Google.
-      3. Merge and deduplicate by source_id.
+      1. PRIMARY: query Google Places (if configured and budget remains).
+      2. FALLBACK: if Google was unavailable or returned fewer than
+         fallback_threshold results, query OSM to fill the gap.
 
     Returns (new_org_count, osm_searched, google_searched).
     """
@@ -343,41 +349,38 @@ def discover_city_hybrid(
     total_new = 0
     did_osm = False
     did_google = False
+    settings = get_settings()
 
     for rkey in religion_keys:
-        # --- OSM (always first, free) ---
-        osm_candidates = osm_find_organizations(city, country, rkey, limit=per_religion)
-        did_osm = True
+        google_candidates: list[OrgCandidate] = []
 
-        osm_new = save_candidates(
-            session, osm_candidates, city=city, country=country, language_code=language_code
+        # --- PRIMARY: Google Places, while a key is set and budget remains ---
+        if settings.places_configured() and (
+            settings.places_daily_limit - _count_calls_today(session) > 0
+        ):
+            try:
+                google_candidates = find_organizations(
+                    city, country, rkey, limit=per_religion, db_session=session
+                )
+                total_new += save_candidates(
+                    session, google_candidates,
+                    city=city, country=country, language_code=language_code,
+                )
+                did_google = True
+            except DiscoveryUnavailable:
+                google_candidates = []  # budget hit mid-run — OSM takes over below
+
+        # --- FALLBACK: OSM, when Google was unavailable or thin ---
+        if len(google_candidates) >= fallback_threshold:
+            continue  # Google covered this religion well — skip OSM
+
+        osm_candidates = osm_find_organizations(
+            city, country, rkey, limit=per_religion - len(google_candidates)
         )
-        total_new += osm_new
-
-        # --- Google Places (fallback when OSM is thin and budget allows) ---
-        if len(osm_candidates) >= osm_fallback_threshold:
-            continue  # OSM covered this religion well — skip Google
-
-        settings = get_settings()
-        if not settings.places_configured():
-            continue  # no API key configured
-
-        budget_left = settings.places_daily_limit - _count_calls_today(session)
-        if budget_left <= 0:
-            continue  # daily Google limit exhausted — OSM only
-
-        try:
-            google_candidates = find_organizations(
-                city, country, rkey,
-                limit=per_religion - len(osm_candidates),
-                db_session=session,
-            )
-            google_new = save_candidates(
-                session, google_candidates, city=city, country=country, language_code=language_code
-            )
-            total_new += google_new
-            did_google = True
-        except DiscoveryUnavailable:
-            pass  # limit hit mid-run — continue with OSM results
+        did_osm = True
+        total_new += save_candidates(
+            session, osm_candidates,
+            city=city, country=country, language_code=language_code,
+        )
 
     return total_new, did_osm, did_google

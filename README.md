@@ -23,13 +23,16 @@ supply them. One command runs the whole thing.
    │                                                          │
    ▼                                                          │
  seed region → discover → enrich → draft → send ──────────────┘  (loops, region by region)
- (Europe →      (OSM free,  (public  (your      (Gmail,
-  N.America →    Google      website  template,   within the
-  Asia → …)      fallback)   email)   bilingual)  daily limit)
+ (Europe →      (Google     (public  (your      (Gmail,
+  N.America →    primary,    website  template,   within the
+  Asia → …)      OSM free    email)   bilingual)  daily limit)
+                 fallback)
 ```
 
-- **Free by default.** Discovery uses **OpenStreetMap** (no key, unlimited) as the primary
-  source; the Google Places API is only a fallback where OSM is thin — so you can run for free.
+- **Google Places is the primary source** (best coverage, websites, phone numbers). Once the
+  daily Google budget (`PLACES_DAILY_LIMIT`) is reached, discovery continues for free on
+  **OpenStreetMap** (no key) — so it never stops, and runs free after the cap. Leave the key
+  blank to run 100% free on OSM only.
 - **No double-contact.** Every city and organization is tracked in `data/outreach.sqlite`.
 - **Dry-run first.** Ships in `EMAIL_MODE=draft`: it discovers and drafts but **sends nothing**
   until you decide to go live.
@@ -70,7 +73,7 @@ Open `.env` in VS Code and fill in the top block — that's your whole configura
 | `EMAIL_SUBJECT` | The subject line (`{{org_name}}` allowed) |
 | `EMAIL_MODE` | Leave as `draft` for now (dry run — sends nothing) |
 | `DAILY_SEND_LIMIT` | Stay under your Gmail cap (free ≈ 500/day); ramp up slowly |
-| `GOOGLE_PLACES_API_KEY` | Optional — leave blank to run **free, OSM-only** |
+| `GOOGLE_PLACES_API_KEY` | **Primary** discovery source. Leave blank to run **free, OSM-only** |
 
 ### 3 · Drop in your email
 
@@ -224,8 +227,8 @@ official_languages_by_country.csv ← country / language / city source data
 src/infinity_outreach/
   autorun.py        ← the autonomous loop (`cli auto`)
   campaign.py       ← discover → enrich → draft → send orchestration
-  osm_discovery.py  ← OpenStreetMap (free, primary) discovery
-  discovery.py      ← Google Places (fallback) discovery
+  discovery.py      ← Google Places (primary) discovery
+  osm_discovery.py  ← OpenStreetMap (free fallback) discovery
   website_enricher.py ← public website email extraction
   email_writer.py   ← assembles the email from your template files
   email_sender.py   ← Gmail/SMTP sending
