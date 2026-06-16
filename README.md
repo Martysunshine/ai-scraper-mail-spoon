@@ -13,7 +13,6 @@ It runs continuously for hours, days, or weeks, tracks everything in a local dat
 **never contacts anyone twice**, and stops/resumes cleanly. No AI writes the emails — you
 supply them. One command runs the whole thing.
 
-Built by **martin.matysek**
 
 ---
 
@@ -75,14 +74,20 @@ Open `.env` in VS Code and fill in the top block — that's your whole configura
 
 ### 3 · Drop in your email
 
-Open `email_templates/outreach_en.html` and replace the sample body with your finished,
-Gmail-ready HTML (links, formatting — anything Gmail supports). Keep two placeholders:
+The emails live in **`email_templates/`** and ship ready to use — 26 languages, all built
+from one source file, **`outreach_languages.md`** (one section per language). To use your own
+copy, edit that file and regenerate the HTML:
 
-- `{{org_name}}` → becomes `Dear First Baptist Church,`
-- `{{opt_out}}` → the required unsubscribe line
+```powershell
+.\.venv\Scripts\python.exe tools\build_email_templates.py
+```
 
-Want native-language versions? Add `outreach_cs.html`, `outreach_fr.html`, `outreach_de.html`, …
-(a Czech example is included). Any language without its own file just receives the English email.
+- `{{org_name}}` is the only per-org placeholder — it becomes the greeting, e.g. `Dear First Baptist Church,`.
+- The **signature** (Kind Regards + banner + buttons) lives in `email_templates/signature.html`
+  and is appended to every email automatically.
+- The **opt-out / unsubscribe** line is added automatically at the bottom — you don't manage it.
+- A recipient gets its **native language + English**; any language without a file falls back to English.
+
 Details in `email_templates/README.md`.
 
 ### 4 · Run it
@@ -209,9 +214,11 @@ any time and it picks up exactly where it left off.
 ```
 .env                              ← your config + secrets (never committed)
 email_templates/
-  outreach_en.html                ← YOUR English email (required)
-  outreach_cs.html                ← native versions, one per language
-  README.md                       ← how templates + placeholders work
+  outreach_languages.md           ← SOURCE: every language's email text
+  outreach_<code>.html            ← generated from the markdown (26 languages)
+  signature.html                  ← the signature appended to every email
+  README.md                       ← how the templates + signature work
+tools/build_email_templates.py    ← regenerates the HTML from the markdown
 official_languages_by_country.csv ← country / language / city source data
 
 src/infinity_outreach/
@@ -243,6 +250,7 @@ prompts/agent_rules.md        ← rules an autonomous agent must follow
 $py = ".\.venv\Scripts\python.exe"
 & $py -m infinity_outreach.cli auto          # run autonomously until done (the main command)
 & $py -m infinity_outreach.cli stop          # ask a running auto loop to stop gracefully
+& $py -m infinity_outreach.cli send-test you@example.com   # send ONE real test email (template + signature)
 & $py -m infinity_outreach.cli export-orgs   # write the organizations.csv report now
 & $py -m infinity_outreach.cli web --port 8080   # read-only monitoring panel
 & $py -m infinity_outreach.cli stats         # quick status summary

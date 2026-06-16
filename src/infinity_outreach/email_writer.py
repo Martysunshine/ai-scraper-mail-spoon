@@ -64,6 +64,33 @@ def _strip_html_comments(html: str) -> str:
     return re.sub(r"<!--.*?-->", "", html, flags=re.DOTALL).strip()
 
 
+@lru_cache(maxsize=1)
+def load_signature() -> str | None:
+    """Return the Infinity Faith signature block from email_templates/signature.html.
+
+    That file is a signature *builder* page; the real signature is the
+    ``<table id="sig">…</table>`` inside it (Kind Regards, the team, CTA buttons,
+    and the hosted banner). We extract that table verbatim — its MSO conditional
+    comments must be preserved, so it is NOT run through the comment stripper.
+    """
+    path = template_dir() / "signature.html"
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    start = text.find('<table id="sig"')
+    if start == -1:
+        return None
+    # The signature table contains nested tables; bound the search at the page's
+    # "Actions" UI and take everything up to the last </table> before it.
+    anchor = text.find("<!-- Actions -->", start)
+    chunk = text[start:anchor] if anchor != -1 else text[start:]
+    close = chunk.rfind("</table>")
+    if close == -1:
+        return None
+    return chunk[: close + len("</table>")].strip()
+
+
 def _fill(html: str, *, org_name: str, opt_out: str) -> str:
     filled = html.replace("{{org_name}}", org_name).replace("{{opt_out}}", opt_out)
     return _strip_html_comments(filled)
@@ -117,11 +144,15 @@ def build_email(
 
     body = (_SEPARATOR.join(parts)) if len(parts) == 2 else parts[0]
 
-    # Guarantee an opt-out line exists even if the operator removed the placeholder.
-    if "unsubscribe" not in body.lower() and "opt out" not in body.lower():
-        body += (
-            f'\n<p style="font-size:12px;color:#888;margin-top:24px;">{opt_out}</p>'
-        )
+    # Sign-off: the Infinity Faith signature (with banner + CTA buttons), appended
+    # once after the bilingual message. SMTP does not apply a Gmail signature, so
+    # we bake it in here.
+    signature = load_signature()
+    if signature:
+        body += "\n" + signature
+
+    # A single opt-out footer at the very bottom (compliance), after the signature.
+    body += f'\n<p style="font-size:12px;color:#888;margin-top:24px;">{opt_out}</p>'
 
     return DraftContent(subject=_subject_for(name, settings), body=body, used_fallback=False)
 

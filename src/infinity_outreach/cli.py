@@ -205,6 +205,46 @@ def cmd_run(
     _print_stats("Pipeline", stats)
 
 
+@app.command("send-test")
+def cmd_send_test(
+    to: str = typer.Argument(..., help="Recipient address for the test email."),
+    org: str = typer.Option("Sample Community Church", "--org", help="Org name used in the greeting."),
+    lang: str = typer.Option("en", "--lang", help="Language code (e.g. en, cs, de)."),
+) -> None:
+    """Send ONE real test email (the live template + signature) to an address.
+
+    Bypasses the pipeline, suppression list, daily limit and EMAIL_MODE — it is an
+    explicit manual test, so it sends regardless of those. Use it to confirm your
+    SMTP credentials work and to see exactly how the email renders in an inbox.
+    """
+    from infinity_outreach import email_sender
+    from infinity_outreach.email_writer import build_email
+
+    settings = get_settings()
+    content = build_email(org_name=org, language_code=lang)
+    try:
+        with email_sender.SmtpSender() as sender:
+            msg = email_sender._build_message(
+                subject=content.subject,
+                body=content.body,
+                to_email=to,
+                from_name=settings.sender_name,
+                from_email=settings.effective_sender_email or settings.smtp_user,
+            )
+            message_id = sender.send(msg, to)
+    except email_sender.SenderNotConfigured as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(1)
+    except Exception as exc:  # noqa: BLE001
+        console.print(f"[red]Send failed:[/red] {exc}")
+        raise typer.Exit(1)
+    console.print(
+        f"[green]Test email sent[/green] to [bold]{to}[/bold] "
+        f"from {settings.effective_sender_email or settings.smtp_user} "
+        f"(subject: {content.subject!r}, message-id {message_id})."
+    )
+
+
 @app.command("auto")
 def cmd_auto() -> None:
     """Run the FULL pipeline autonomously and continuously until everything is done.

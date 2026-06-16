@@ -46,10 +46,15 @@ class SendOutcome:
 
 def _html_to_text(html: str) -> str:
     """Best-effort plain-text fallback from the HTML body (for the text/plain part)."""
-    text = re.sub(r"(?i)<br\s*/?>", "\n", html)
+    # Drop comments first — this also removes the signature's Outlook (MSO/VML)
+    # conditional blocks, which would otherwise leave garbled text.
+    text = re.sub(r"<!--.*?-->", "", html, flags=re.DOTALL)
+    text = re.sub(r"(?i)<br\s*/?>", "\n", text)
     text = re.sub(r"(?i)</p>", "\n\n", text)
+    text = re.sub(r"(?i)</tr>", "\n", text)
     text = re.sub(r"(?i)<hr\s*/?>", "\n----------\n", text)
     text = re.sub(r"<[^>]+>", "", text)            # drop remaining tags
+    text = re.sub(r"[ \t]{2,}", " ", text)          # collapse runs of spaces
     text = re.sub(r"\n{3,}", "\n\n", text)          # collapse blank runs
     return text.strip()
 
