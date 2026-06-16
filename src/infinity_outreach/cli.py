@@ -398,6 +398,16 @@ def cmd_stats() -> None:
         table.add_column("Metric")
         table.add_column("Value", justify="right")
         table.add_row("Cities (pending)", str(s.query(City).filter(City.status == "pending").count()))
+        table.add_row(
+            "  - Google-done",
+            str(s.query(City).filter(
+                City.status == "done", City.google_pending == False, City.google_searched == True  # noqa: E712
+            ).count()),
+        )
+        table.add_row(
+            "  - Awaiting Google (OSM-only)",
+            str(s.query(City).filter(City.google_pending == True).count()),  # noqa: E712
+        )
         table.add_row("Organizations", str(s.query(Organization).count()))
         table.add_row("Contacts", str(s.query(Contact).count()))
         table.add_row("Drafts", str(s.query(EmailDraft).count()))

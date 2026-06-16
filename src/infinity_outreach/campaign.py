@@ -108,48 +108,103 @@ class StageStats:
 
 
 # ── Stage: discovery ────────────────────────────────────────────────────────
+def _region_ordered(session: Session, query) -> list[City]:
+    """Run a City query and sort by region order (Europe first), then id."""
+    cities = session.execute(query).scalars().all()
+    cities.sort(key=lambda c: (region_rank(c.continent), c.id))
+    return cities
+
+
+def _build_discovery_batch(
+    session: Session, campaign: CampaignSetting, max_cities: int
+) -> list[tuple[City, bool]]:
+    """Blend NEW (pending) and RE-VISIT (google_pending) cities for this batch.
+
+    Reserves ~AUTO_REVISIT_RATIO of the slots for re-visits so the daily Google
+    budget splits between fresh discovery and back-filling OSM-only cities. Each
+    item is (city, is_revisit). Interleaves the two so the split holds before the
+    budget is exhausted; fills from the other list if one is short.
+    """
+    def _with_regions(base):
+        q = base
+        if campaign.regions:
+            q = q.where(City.continent.in_(list(campaign.regions)))
+        if campaign.countries:
+            q = q.where(City.country.in_(list(campaign.countries)))
+        return q
+
+    new_cities = _region_ordered(session, _with_regions(select(City).where(City.status == "pending")))
+    revisit_cities = _region_ordered(session, _with_regions(select(City).where(City.google_pending == True)))  # noqa: E712
+
+    ratio = max(0.0, min(1.0, get_settings().auto_revisit_ratio))
+    n_revisit = round(max_cities * ratio) if revisit_cities else 0
+    n_new = max_cities - n_revisit
+    take_new = new_cities[:n_new]
+    take_revisit = revisit_cities[:n_revisit]
+    # Top up from the other list if one came short (never waste a slot).
+    spare = max_cities - len(take_new) - len(take_revisit)
+    if spare > 0 and len(new_cities) > len(take_new):
+        take_new += new_cities[len(take_new):len(take_new) + spare]
+        spare = max_cities - len(take_new) - len(take_revisit)
+    if spare > 0 and len(revisit_cities) > len(take_revisit):
+        take_revisit += revisit_cities[len(take_revisit):len(take_revisit) + spare]
+
+    # Interleave new + revisit so Google budget splits before it's exhausted.
+    batch: list[tuple[City, bool]] = []
+    i = j = 0
+    while i < len(take_new) or j < len(take_revisit):
+        if i < len(take_new):
+            batch.append((take_new[i], False)); i += 1
+        if j < len(take_revisit):
+            batch.append((take_revisit[j], True)); j += 1
+    return batch[:max_cities]
+
+
 def run_discovery(
     session: Session, *, max_cities: int = 5, campaign: CampaignSetting | None = None
 ) -> StageStats:
-    """Discover organizations for pending cities matching the campaign targets."""
+    """Discover orgs: new (pending) cities + re-visit OSM-only cities with Google."""
     campaign = campaign or get_campaign(session)
     stats = StageStats()
     run = _start_task(session, "discover")
 
     religion_keys = list(campaign.religions) or list(DEFAULT_RELIGIONS)
-    query = select(City).where(City.status == "pending")
-    if campaign.regions:
-        query = query.where(City.continent.in_(list(campaign.regions)))
-    if campaign.countries:
-        query = query.where(City.country.in_(list(campaign.countries)))
-    # Work the world in region order (Europe first, then NA, Asia, ...), then by id.
-    pending = session.execute(query).scalars().all()
-    pending.sort(key=lambda c: (region_rank(c.continent), c.id))
-    cities = pending[:max_cities]
+    batch = _build_discovery_batch(session, campaign, max_cities)
 
-    if not cities:
+    if not batch:
         stats.notes.append("No pending cities matched the campaign (seed cities first?).")
         _finish_task(session, run, "done", "no cities")
         return stats
 
-    for city in cities:
-        city.status = "processing"
-        session.flush()
+    for city, is_revisit in batch:
+        if not is_revisit:
+            city.status = "processing"
+            session.flush()
         try:
-            new, osm_done, google_done = discovery.discover_city_hybrid(
+            new, osm_done, google_done, budget_skipped = discovery.discover_city_hybrid(
                 session,
                 city=city.city,
                 country=city.country,
                 language_code=city.language_code,
                 religion_keys=religion_keys,
                 max_orgs_per_city=campaign.max_orgs_per_city,
+                google_only=is_revisit,
             )
             stats.discovered += new
-            city.status = "done"
-            city.osm_searched = osm_done
-            city.google_searched = google_done
+            if is_revisit:
+                # Google fully attempted this city now -> clear the debt, unless it
+                # was skipped again (budget still gone), in which case retry later.
+                if google_done:
+                    city.google_searched = True
+                city.google_pending = budget_skipped
+            else:
+                city.status = "done"
+                city.osm_searched = osm_done
+                city.google_searched = google_done
+                city.google_pending = budget_skipped
         except discovery.DiscoveryUnavailable as exc:
-            city.status = "pending"
+            if not is_revisit:
+                city.status = "pending"
             stats.notes.append(str(exc))
             _finish_task(session, run, "error", str(exc))
             return stats
@@ -378,6 +433,11 @@ def work_summary(session: Session, campaign: CampaignSetting | None = None) -> d
     pending_cities = len(pending_list)
     pending_continents = {c.continent for c in pending_list if c.continent}
 
+    revisit_q = select(City).where(City.google_pending == True)  # noqa: E712
+    if campaign.regions:
+        revisit_q = revisit_q.where(City.continent.in_(list(campaign.regions)))
+    revisit_pending = len(session.execute(revisit_q).scalars().all())
+
     enrich_pending = len(
         session.execute(
             select(Organization)
@@ -415,6 +475,7 @@ def work_summary(session: Session, campaign: CampaignSetting | None = None) -> d
 
     return {
         "pending_cities": pending_cities,
+        "revisit_pending": revisit_pending,
         "enrich_pending": enrich_pending,
         "draft_pending": draft_pending,
         "sendable": sendable,

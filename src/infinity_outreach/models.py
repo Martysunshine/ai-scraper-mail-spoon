@@ -59,6 +59,9 @@ class City(Base, TimestampMixin):
     notes: Mapped[str | None] = mapped_column(Text, default=None)
     osm_searched: Mapped[bool] = mapped_column(Boolean, default=False)
     google_searched: Mapped[bool] = mapped_column(Boolean, default=False)
+    # True = Google was skipped here because the daily budget was exhausted; the
+    # city was discovered via OSM and still owes a Google pass (re-visit later).
+    google_pending: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
 
 
 class Organization(Base, TimestampMixin):

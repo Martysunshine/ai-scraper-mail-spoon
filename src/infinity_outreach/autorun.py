@@ -78,6 +78,7 @@ def _heartbeat(session, *, region: str | None, summary: dict) -> str:
 
     line = (
         f"region={region or '—'} | pending_cities={summary['pending_cities']} "
+        f"revisit={summary.get('revisit_pending', 0)} "
         f"enrich={summary['enrich_pending']} draft={summary['draft_pending']} "
         f"sendable={summary['sendable']} | sent_today={sent_today}/{day_limit} "
         f"| google_left={google_left} | mode={settings.email_mode}"
@@ -124,6 +125,7 @@ def _run_one_cycle() -> tuple[bool, str]:
         #    Discovery + enrichment + drafting all exhausted, every region seeded.
         pipeline_done = (
             summary["pending_cities"] == 0
+            and summary.get("revisit_pending", 0) == 0
             and not summary["unseeded_regions"]
             and summary["enrich_pending"] == 0
             and summary["draft_pending"] == 0

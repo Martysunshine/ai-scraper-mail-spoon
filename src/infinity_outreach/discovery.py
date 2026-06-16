@@ -326,22 +326,22 @@ def discover_city_hybrid(
     religion_keys: list[str],
     max_orgs_per_city: int = 20,
     fallback_threshold: int = 5,
-) -> tuple[int, bool, bool]:
+    google_only: bool = False,
+) -> tuple[int, bool, bool, bool]:
     """Discover organizations using Google Places first, OSM as the fallback.
 
-    Google Places is the **primary** source — it has the best coverage and most
-    often includes websites and phone numbers. OpenStreetMap (free, no key) is the
-    **fallback**, used when Google is unavailable: no API key, the daily Google
-    budget (PLACES_DAILY_LIMIT) is exhausted, or Google returned too few results
-    for a religion. So discovery runs on Google up to the daily cap, then keeps
-    going for free on OSM.
+    Google Places is the **primary** source — best coverage, most websites/phones.
+    OpenStreetMap (free, no key) is the **fallback**, used when Google is
+    unavailable: no API key, the daily Google budget (PLACES_DAILY_LIMIT) is
+    exhausted, or Google returned too few results for a religion.
 
-    Flow per religion:
-      1. PRIMARY: query Google Places (if configured and budget remains).
-      2. FALLBACK: if Google was unavailable or returned fewer than
-         fallback_threshold results, query OSM to fill the gap.
+    ``google_only=True`` is the **re-visit** mode: query Google to fill gaps in a
+    city that previously fell back to OSM, and DON'T re-query OSM (it already ran).
 
-    Returns (new_org_count, osm_searched, google_searched).
+    Returns (new_org_count, osm_searched, google_searched, google_budget_skipped).
+    ``google_budget_skipped`` is True when a key is configured but Google was
+    skipped for ≥1 religion because the daily budget was exhausted — i.e. the city
+    still owes a Google pass (re-visit it later).
     """
     from .osm_discovery import osm_find_organizations
 
@@ -349,28 +349,34 @@ def discover_city_hybrid(
     total_new = 0
     did_osm = False
     did_google = False
+    google_budget_skipped = False
     settings = get_settings()
+    has_key = settings.places_configured()
 
     for rkey in religion_keys:
         google_candidates: list[OrgCandidate] = []
 
         # --- PRIMARY: Google Places, while a key is set and budget remains ---
-        if settings.places_configured() and (
-            settings.places_daily_limit - _count_calls_today(session) > 0
-        ):
-            try:
-                google_candidates = find_organizations(
-                    city, country, rkey, limit=per_religion, db_session=session
-                )
-                total_new += save_candidates(
-                    session, google_candidates,
-                    city=city, country=country, language_code=language_code,
-                )
-                did_google = True
-            except DiscoveryUnavailable:
-                google_candidates = []  # budget hit mid-run — OSM takes over below
+        if has_key:
+            if settings.places_daily_limit - _count_calls_today(session) > 0:
+                try:
+                    google_candidates = find_organizations(
+                        city, country, rkey, limit=per_religion, db_session=session
+                    )
+                    total_new += save_candidates(
+                        session, google_candidates,
+                        city=city, country=country, language_code=language_code,
+                    )
+                    did_google = True
+                except DiscoveryUnavailable:
+                    google_candidates = []
+                    google_budget_skipped = True  # budget hit mid-run
+            else:
+                google_budget_skipped = True  # budget already exhausted — Google skipped
 
-        # --- FALLBACK: OSM, when Google was unavailable or thin ---
+        # --- FALLBACK: OSM (skipped in google_only re-visit mode) ---
+        if google_only:
+            continue  # re-visit pass: Google only, OSM already ran for this city
         if len(google_candidates) >= fallback_threshold:
             continue  # Google covered this religion well — skip OSM
 
@@ -383,4 +389,4 @@ def discover_city_hybrid(
             city=city, country=country, language_code=language_code,
         )
 
-    return total_new, did_osm, did_google
+    return total_new, did_osm, did_google, google_budget_skipped

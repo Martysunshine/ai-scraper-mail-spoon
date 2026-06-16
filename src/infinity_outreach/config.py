@@ -87,6 +87,9 @@ class Settings(BaseSettings):
     # Autonomous loop (`cli auto`)
     auto_cycle_seconds: float = Field(default=60.0, alias="AUTO_CYCLE_SECONDS")
     auto_discover_batch: int = Field(default=3, alias="AUTO_DISCOVER_BATCH")
+    # Share of each discovery batch reserved for re-visiting OSM-fallback cities
+    # with Google (the rest goes to new cities) — splits the daily Google budget.
+    auto_revisit_ratio: float = Field(default=0.30, alias="AUTO_REVISIT_RATIO")
 
     # Discovery
     google_places_api_key: str = Field(default="", alias="GOOGLE_PLACES_API_KEY")

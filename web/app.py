@@ -97,6 +97,10 @@ def dashboard(request: Request, msg: str = ""):
             "cities_total": s.query(City).count(),
             "cities_osm": s.query(City).filter(City.osm_searched == True).count(),
             "cities_google": s.query(City).filter(City.google_searched == True).count(),
+            "cities_google_done": s.query(City).filter(
+                City.status == "done", City.google_pending == False, City.google_searched == True  # noqa: E712
+            ).count(),
+            "cities_awaiting_google": s.query(City).filter(City.google_pending == True).count(),  # noqa: E712
             "organizations": s.query(Organization).count(),
             "orgs_new": s.query(Organization).filter(Organization.status == "new").count(),
             "orgs_contacted": s.query(Organization).filter(Organization.status == "contacted").count(),
@@ -339,6 +343,11 @@ def api_status():
             "organizations": s.query(Organization).count(),
             "orgs_contacted": s.query(Organization).filter(Organization.status == "contacted").count(),
             "cities_done": s.query(City).filter(City.status == "done").count(),
+            "cities_pending": s.query(City).filter(City.status == "pending").count(),
+            "cities_google_complete": s.query(City).filter(
+                City.status == "done", City.google_pending == False, City.google_searched == True  # noqa: E712
+            ).count(),
+            "cities_awaiting_google": s.query(City).filter(City.google_pending == True).count(),  # noqa: E712
             "cities_osm_searched": s.query(City).filter(City.osm_searched == True).count(),
             "cities_google_searched": s.query(City).filter(City.google_searched == True).count(),
             "drafts": s.query(EmailDraft).count(),

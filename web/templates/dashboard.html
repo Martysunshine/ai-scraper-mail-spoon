@@ -60,13 +60,18 @@
 </section>
 
 <section class="panel">
-  <h2>Discovery sources</h2>
+  <h2>Discovery sources &amp; coverage</h2>
   <div class="cards">
     <div class="card"><span class="num">{{ metrics.cities_total }}</span><span class="lbl">Cities total</span></div>
     <div class="card"><span class="num">{{ metrics.cities_done }}</span><span class="lbl">Cities searched</span></div>
+    <div class="card"><span class="num">{{ metrics.cities_google_done }}</span><span class="lbl">Google-complete</span></div>
+    <div class="card"><span class="num">{{ metrics.cities_awaiting_google }}</span><span class="lbl">OSM-only → awaiting Google</span></div>
     <div class="card"><span class="num">{{ metrics.cities_osm }}</span><span class="lbl">Via OSM (free)</span></div>
     <div class="card"><span class="num">{{ metrics.cities_google }}</span><span class="lbl">Via Google Places</span></div>
   </div>
+  <p class="hint">"OSM-only → awaiting Google" cities were discovered via OpenStreetMap because the
+    Google daily budget was spent; the loop re-visits them with Google automatically once budget
+    is available, to catch organizations OSM missed.</p>
   {% set pct = (places_calls_today / places_daily_limit * 100) | int if places_daily_limit > 0 else 0 %}
   <p>
     <span class="status {{ 'ok' if pct < 80 else ('warn' if pct < 100 else 'err') }}">

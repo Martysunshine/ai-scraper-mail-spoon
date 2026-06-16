@@ -72,6 +72,7 @@ def _migrate(engine) -> None:
     new_columns = [
         "ALTER TABLE cities ADD COLUMN osm_searched BOOLEAN NOT NULL DEFAULT 0",
         "ALTER TABLE cities ADD COLUMN google_searched BOOLEAN NOT NULL DEFAULT 0",
+        "ALTER TABLE cities ADD COLUMN google_pending BOOLEAN NOT NULL DEFAULT 0",
         "ALTER TABLE campaign_settings ADD COLUMN regions JSON",
     ]
     with engine.connect() as conn:
