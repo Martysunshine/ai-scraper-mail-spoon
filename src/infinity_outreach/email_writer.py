@@ -119,17 +119,11 @@ def build_email(
     code = (language_code or "").strip().lower()
     native = load_template(code) if code and code != "en" else None
 
-    # Sign-off appended to EACH language version, so each one is self-contained
-    # (message → Kind Regards + contact). SMTP does not apply a Gmail signature,
-    # so we bake it in here.
-    signature = load_signature()
-    sig_suffix = ("\n" + signature) if signature else ""
-
     parts: list[str] = []
     if native:
-        parts.append(_fill(native, org_name=name, opt_out=opt_out) + sig_suffix)
+        parts.append(_fill(native, org_name=name, opt_out=opt_out))
     if english:
-        parts.append(_fill(english, org_name=name, opt_out=opt_out) + sig_suffix)
+        parts.append(_fill(english, org_name=name, opt_out=opt_out))
 
     if not parts:
         # No template files at all — degrade to a minimal compliant message
@@ -149,7 +143,11 @@ def build_email(
 
     body = (_SEPARATOR.join(parts)) if len(parts) == 2 else parts[0]
 
-    # A single opt-out footer at the very bottom (compliance).
+    # One signature, then one opt-out footer, at the very bottom — fewest links is
+    # best for deliverability. SMTP doesn't apply a Gmail signature, so bake it in.
+    signature = load_signature()
+    if signature:
+        body += "\n" + signature
     body += f'\n<p style="font-size:12px;color:#888;margin-top:24px;">{opt_out}</p>'
 
     return DraftContent(subject=_subject_for(name, settings), body=body, used_fallback=False)
