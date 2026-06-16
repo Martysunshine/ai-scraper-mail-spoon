@@ -67,7 +67,10 @@ def _build_message(
     msg["Subject"] = subject
     msg["From"] = formataddr((from_name, from_email))
     msg["To"] = to_email
-    msg["Message-ID"] = make_msgid()
+    # Use the sender's domain in the Message-ID (not the local hostname, e.g.
+    # "...@Martin-ASUS.localdomain") — cleaner and better for deliverability.
+    _domain = from_email.split("@")[-1] if "@" in from_email else None
+    msg["Message-ID"] = make_msgid(domain=_domain) if _domain else make_msgid()
     # Order matters: text/plain first, then the HTML the recipient actually sees.
     msg.attach(MIMEText(_html_to_text(body), "plain", "utf-8"))
     msg.attach(MIMEText(f"<html><body>{body}</body></html>", "html", "utf-8"))
