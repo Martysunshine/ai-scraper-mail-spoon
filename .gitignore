@@ -15,14 +15,16 @@ venv/
 env/
 
 # Database & generated data
-data/outreach.sqlite
-data/outreach.sqlite-journal
+data/*.sqlite
+data/*.sqlite-journal
 data/exports/*.csv
 data/cities.csv
+data/STOP
 
 # Logs
 logs/*.log
 logs/*.jsonl
+logs/*.txt
 
 # OS / editor
 .DS_Store
@@ -37,6 +39,8 @@ Thumbs.db
 htmlcov/
 
 
-AGENT_RULES.md
-manual.md
+# Root-only: keep these private, but DON'T ignore prompts/agent_rules.md
+# (the leading slash anchors the match to the repo root).
+/AGENT_RULES.md
+/manual.md
 

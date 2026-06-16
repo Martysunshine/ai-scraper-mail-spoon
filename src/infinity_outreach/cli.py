@@ -205,6 +205,44 @@ def cmd_run(
     _print_stats("Pipeline", stats)
 
 
+@app.command("auto")
+def cmd_auto() -> None:
+    """Run the FULL pipeline autonomously and continuously until everything is done.
+
+    Discover → enrich → draft → send, region by region, respecting daily limits,
+    resuming cleanly after any stop. This is the single command an AI agent runs.
+    Honours EMAIL_MODE: 'draft' (default) drafts but never sends; set it to
+    'auto_send' in .env to go live. Stop with `cli stop` or Ctrl-C.
+    """
+    from infinity_outreach import autorun
+
+    init_db()
+    autorun.run_forever()
+
+
+@app.command("stop")
+def cmd_stop() -> None:
+    """Ask a running `auto` loop to stop gracefully after its current step."""
+    from infinity_outreach.config import STOP_FILE
+
+    STOP_FILE.parent.mkdir(parents=True, exist_ok=True)
+    STOP_FILE.write_text("stop", encoding="utf-8")
+    console.print(f"[yellow]Stop requested.[/yellow] The auto loop will exit shortly ({STOP_FILE}).")
+
+
+@app.command("export-orgs")
+def cmd_export_orgs(
+    csv_path: str = typer.Argument("", help="Output CSV path (default: data/exports/organizations.csv)."),
+) -> None:
+    """Write the deliverable table: every org + what was sent."""
+    from infinity_outreach.reporting import write_orgs_report
+
+    out = Path(csv_path) if csv_path else None
+    with session_scope() as s:
+        path = write_orgs_report(s, out)
+    console.print(f"[green]Wrote organizations report to {path}[/green]")
+
+
 @app.command("scan-optouts")
 def cmd_scan_optouts() -> None:
     """Scan the mailbox (IMAP) for unsubscribe replies and suppress them."""

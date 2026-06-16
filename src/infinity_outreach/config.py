@@ -14,6 +14,18 @@ from dotenv import load_dotenv
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Make Python's TLS trust the OS certificate store (Windows/macOS). Corporate
+# proxies and antivirus HTTPS scanners inject their own root CA into the OS
+# store but not into certifi, which otherwise breaks every outbound HTTPS call
+# (OSM, Google Places, website enrichment, SMTP) with CERTIFICATE_VERIFY_FAILED.
+# This trusts the OS store — it does NOT disable verification. Optional import.
+try:
+    import truststore as _truststore
+
+    _truststore.inject_into_ssl()
+except Exception:  # noqa: BLE001 — truststore is optional; fall back to certifi
+    pass
+
 # Repository root = three levels up from this file:
 #   src/infinity_outreach/config.py -> src/infinity_outreach -> src -> ROOT
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -51,10 +63,21 @@ class Settings(BaseSettings):
     ollama_api_key: str = Field(default="ollama", alias="OLLAMA_API_KEY")
 
     # Sending behaviour
-    email_mode: str = Field(default="review", alias="EMAIL_MODE")
+    # draft -> never send (dry run); review -> only approved; auto_send -> send new drafts.
+    email_mode: str = Field(default="draft", alias="EMAIL_MODE")
     require_human_approval: bool = Field(default=True, alias="REQUIRE_HUMAN_APPROVAL")
     daily_send_limit: int = Field(default=200, alias="DAILY_SEND_LIMIT")
     send_delay_seconds: float = Field(default=20.0, alias="SEND_DELAY_SECONDS")
+
+    # Email content (the body comes from email_templates/, only the subject is here)
+    email_subject: str = Field(
+        default="An invitation to try Infinity Faith", alias="EMAIL_SUBJECT"
+    )
+    email_template_dir: str = Field(default="email_templates", alias="EMAIL_TEMPLATE_DIR")
+
+    # Autonomous loop (`cli auto`)
+    auto_cycle_seconds: float = Field(default=60.0, alias="AUTO_CYCLE_SECONDS")
+    auto_discover_batch: int = Field(default=3, alias="AUTO_DISCOVER_BATCH")
 
     # Discovery
     google_places_api_key: str = Field(default="", alias="GOOGLE_PLACES_API_KEY")
@@ -112,6 +135,18 @@ def ensure_runtime_dirs() -> None:
     """Create the directories the engine writes to (idempotent)."""
     for d in (DATA_DIR, LOGS_DIR, EXPORTS_DIR):
         d.mkdir(parents=True, exist_ok=True)
+
+
+def template_dir() -> Path:
+    """Absolute path to the email-templates folder (from EMAIL_TEMPLATE_DIR)."""
+    raw = Path(get_settings().email_template_dir)
+    return raw if raw.is_absolute() else (PROJECT_ROOT / raw)
+
+
+# Sentinel file the autonomous loop watches for a graceful stop request.
+STOP_FILE = DATA_DIR / "STOP"
+# The deliverable the agent regenerates: every org + what was sent.
+ORGS_EXPORT = EXPORTS_DIR / "organizations.csv"
 
 
 @lru_cache(maxsize=1)

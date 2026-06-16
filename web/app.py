@@ -31,7 +31,7 @@ from fastapi.templating import Jinja2Templates
 from infinity_outreach import campaign as campaign_mod
 from infinity_outreach.compliance import add_to_suppression, sent_today_count
 from infinity_outreach.config import get_settings
-from infinity_outreach.constants import RELIGIONS
+from infinity_outreach.constants import REGION_ORDER, RELIGIONS
 from infinity_outreach.db import init_db, session_scope
 from infinity_outreach.models import (
     ApiCallLog,
@@ -42,7 +42,24 @@ from infinity_outreach.models import (
     SentLog,
     TaskRun,
 )
-from infinity_outreach.seed import country_language_index, seed_cities
+from infinity_outreach.seed import seed_cities
+
+
+def _region_progress(s) -> list[dict]:
+    """Per-region city progress (only regions that have cities seeded)."""
+    rows = []
+    for region in REGION_ORDER:
+        total = s.query(City).filter(City.continent == region).count()
+        if not total:
+            continue
+        done = s.query(City).filter(City.continent == region, City.status == "done").count()
+        rows.append({
+            "region": region,
+            "total": total,
+            "done": done,
+            "pct": int(done / total * 100) if total else 0,
+        })
+    return rows
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -87,6 +104,13 @@ def dashboard(request: Request, msg: str = ""):
         recent_runs = s.query(TaskRun).order_by(TaskRun.id.desc()).limit(8).all()
         today_start = datetime.combine(date.today(), datetime.min.time()).replace(tzinfo=timezone.utc)
         places_calls_today = s.query(ApiCallLog).filter(ApiCallLog.called_at >= today_start).count()
+        region_progress = _region_progress(s)
+        last_auto = (
+            s.query(TaskRun)
+            .filter(TaskRun.task_name == "auto")
+            .order_by(TaskRun.id.desc())
+            .first()
+        )
         ctx = {
             "request": request,
             "page": "dashboard",
@@ -95,6 +119,10 @@ def dashboard(request: Request, msg: str = ""):
             "campaign": campaign,
             "settings": settings,
             "recent_runs": recent_runs,
+            "region_progress": region_progress,
+            "last_auto": last_auto,
+            "email_mode": settings.email_mode,
+            "daily_send_limit": settings.daily_send_limit,
             "smtp_ok": settings.smtp_configured(),
             "places_ok": settings.places_configured(),
             "places_calls_today": places_calls_today,
@@ -106,6 +134,7 @@ def dashboard(request: Request, msg: str = ""):
 # ── Settings (campaign configuration) ───────────────────────────────────────
 @app.get("/settings")
 def settings_page(request: Request, msg: str = ""):
+    settings = get_settings()
     with session_scope() as s:
         campaign = campaign_mod.get_campaign(s)
         ctx = {
@@ -114,7 +143,13 @@ def settings_page(request: Request, msg: str = ""):
             "msg": msg,
             "campaign": campaign,
             "religions": RELIGIONS,
-            "countries": country_language_index(),
+            "region_order": REGION_ORDER,
+            # Read-only sending policy (set in .env / VS Code) shown for reference.
+            "email_mode": settings.email_mode,
+            "daily_send_limit": settings.daily_send_limit,
+            "email_subject": settings.email_subject,
+            "sender_name": settings.sender_name,
+            "sender_email": settings.effective_sender_email,
         }
     return templates.TemplateResponse(request, "settings.html", ctx)
 
@@ -123,44 +158,15 @@ def settings_page(request: Request, msg: str = ""):
 async def settings_save(request: Request):
     form = await request.form()
     religions = form.getlist("religions")
-    countries = form.getlist("countries")
-
-    # Countries arrive as "Country||language" so we can also record languages.
-    parsed_countries = []
-    parsed_languages = set()
-    for value in countries:
-        name, _, lang = value.partition("||")
-        parsed_countries.append(name)
-        if lang:
-            parsed_languages.add(lang)
-
-    def _int(name: str, default: int) -> int:
-        try:
-            return int(form.get(name, default))
-        except (TypeError, ValueError):
-            return default
+    regions = form.getlist("regions")
 
     with session_scope() as s:
         campaign_mod.update_campaign(
             s,
             religions=religions or None,
-            countries=parsed_countries or [],
-            languages=sorted(parsed_languages),
-            daily_send_limit=_int("daily_send_limit", 200),
-            max_orgs_per_city=_int("max_orgs_per_city", 20),
-            email_mode=form.get("email_mode") or "review",
-            include_native=form.get("include_native") == "on",
-            include_english=form.get("include_english") == "on",
-            sender_name=form.get("sender_name") or None,
-            sender_email=form.get("sender_email") or None,
-            sender_org=form.get("sender_org") or None,
-            app_name=form.get("app_name") or None,
-            app_url=form.get("app_url") or None,
-            subject_hint=form.get("subject_hint") or None,
-            pitch=form.get("pitch") or None,
-            extra_instructions=form.get("extra_instructions") or "",
+            regions=regions or None,
         )
-    return _redirect("/settings", "Settings saved. The engine will use them on the next run.")
+    return _redirect("/settings", "Targeting saved. The autonomous loop picks it up on the next cycle.")
 
 
 # ── Worklist actions ────────────────────────────────────────────────────────
@@ -210,7 +216,10 @@ def organizations_page(request: Request, msg: str = ""):
                 "country": o.country,
                 "religion": o.religion,
                 "website": o.website,
+                "email": o.contacts[0].email if o.contacts else "",
                 "contacts": len(o.contacts),
+                "status": o.status,
+                "source": o.source,
             }
             for o in orgs
         ]
@@ -306,12 +315,19 @@ def api_status():
         campaign = campaign_mod.get_campaign(s)
         today_start = datetime.combine(date.today(), datetime.min.time()).replace(tzinfo=timezone.utc)
         places_calls_today = s.query(ApiCallLog).filter(ApiCallLog.called_at >= today_start).count()
+        last_auto = (
+            s.query(TaskRun).filter(TaskRun.task_name == "auto").order_by(TaskRun.id.desc()).first()
+        )
         return {
             "app": settings.app_name,
-            "email_mode": campaign.email_mode,
-            "daily_send_limit": campaign.daily_send_limit,
+            "email_mode": settings.email_mode,
+            "daily_send_limit": settings.daily_send_limit,
             "sent_today": sent_today_count(s),
             "religions": campaign.religions,
+            "regions": campaign.regions,
+            "region_progress": _region_progress(s),
+            "auto_last_heartbeat": last_auto.finished_at.isoformat() if last_auto and last_auto.finished_at else None,
+            "auto_last_status": last_auto.details if last_auto else None,
             "countries": campaign.countries,
             "organizations": s.query(Organization).count(),
             "orgs_contacted": s.query(Organization).filter(Organization.status == "contacted").count(),

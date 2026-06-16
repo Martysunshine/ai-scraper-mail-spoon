@@ -13,6 +13,7 @@ Workspace ~2000/day — keep DAILY_SEND_LIMIT under your real cap.
 
 from __future__ import annotations
 
+import re
 import smtplib
 import ssl
 import time
@@ -43,18 +44,28 @@ class SendOutcome:
     message_id: str | None = None
 
 
+def _html_to_text(html: str) -> str:
+    """Best-effort plain-text fallback from the HTML body (for the text/plain part)."""
+    text = re.sub(r"(?i)<br\s*/?>", "\n", html)
+    text = re.sub(r"(?i)</p>", "\n\n", text)
+    text = re.sub(r"(?i)<hr\s*/?>", "\n----------\n", text)
+    text = re.sub(r"<[^>]+>", "", text)            # drop remaining tags
+    text = re.sub(r"\n{3,}", "\n\n", text)          # collapse blank runs
+    return text.strip()
+
+
 def _build_message(
     *, subject: str, body: str, to_email: str, from_name: str, from_email: str
 ) -> MIMEMultipart:
+    """Build a multipart/alternative message. ``body`` is HTML (template output)."""
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = formataddr((from_name, from_email))
     msg["To"] = to_email
     msg["Message-ID"] = make_msgid()
-    # Plain text is the body we generated; provide a minimal HTML twin.
-    msg.attach(MIMEText(body, "plain", "utf-8"))
-    html = "<br>".join(body.splitlines())
-    msg.attach(MIMEText(f"<html><body>{html}</body></html>", "html", "utf-8"))
+    # Order matters: text/plain first, then the HTML the recipient actually sees.
+    msg.attach(MIMEText(_html_to_text(body), "plain", "utf-8"))
+    msg.attach(MIMEText(f"<html><body>{body}</body></html>", "html", "utf-8"))
     return msg
 
 

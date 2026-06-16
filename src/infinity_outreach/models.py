@@ -190,6 +190,7 @@ class CampaignSetting(Base, TimestampMixin):
 
     # Targeting
     religions: Mapped[list] = mapped_column(JSON, default=list)
+    regions: Mapped[list] = mapped_column(JSON, default=list)  # continents, in REGION_ORDER
     countries: Mapped[list] = mapped_column(JSON, default=list)
     languages: Mapped[list] = mapped_column(JSON, default=list)
 
@@ -221,11 +222,13 @@ class CampaignSetting(Base, TimestampMixin):
     @staticmethod
     def defaults() -> dict:
         """Field defaults used when seeding the singleton row."""
-        from .constants import DEFAULT_RELIGIONS
+        from .constants import DEFAULT_RELIGIONS, REGION_ORDER
 
         return {
             "id": 1,
             "religions": list(DEFAULT_RELIGIONS),
+            # Whole world, in order — the loop works Europe first, then the rest.
+            "regions": list(REGION_ORDER),
             "countries": [],
             "languages": [],
         }

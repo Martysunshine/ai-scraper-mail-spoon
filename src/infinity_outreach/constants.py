@@ -182,7 +182,32 @@ def language_name(code: str | None) -> str:
     return LANGUAGE_NAMES.get(code.strip().lower(), "English")
 
 
+# ── Regions ─────────────────────────────────────────────────────────────────
+# The order the engine works the world in. Matches the project brief:
+# Europe first, then North America, then Asia, then South America, then the rest.
+# Values must match the `Continent` column in official_languages_by_country.csv.
+REGION_ORDER: list[str] = [
+    "Europe",
+    "North America",
+    "Asia",
+    "South America",
+    "Oceania",
+    "Africa",
+]
+
+
+def region_rank(continent: str | None) -> int:
+    """Sort key for a continent (lower = worked sooner). Unknown regions trail."""
+    if not continent:
+        return len(REGION_ORDER) + 1
+    try:
+        return REGION_ORDER.index(continent.strip())
+    except ValueError:
+        return len(REGION_ORDER) + 1
+
+
 # Draft / sending status vocabularies (kept in one place to avoid typos).
 DRAFT_STATUSES = ("draft", "approved", "sent", "rejected", "failed")
 CONTACT_STATUSES = ("new", "valid", "bounced", "opted_out")
 CITY_STATUSES = ("pending", "processing", "done", "skipped")
+ORG_STATUSES = ("new", "contacted")

@@ -2,24 +2,58 @@
 {% block content %}
 <h1>Dashboard</h1>
 
+<section class="panel">
+  <h2>Autonomous agent</h2>
+  {% if last_auto %}
+    <p>
+      <span class="status ok">running / last heartbeat</span>
+      <span class="muted">{{ last_auto.finished_at.strftime('%Y-%m-%d %H:%M:%S') if last_auto.finished_at else '' }}</span>
+    </p>
+    <pre class="draft-body">{{ last_auto.details or '' }}</pre>
+  {% else %}
+    <p><span class="status warn">not started yet</span></p>
+    <p class="hint">Start it from a terminal:
+      <code>python -m infinity_outreach.cli auto</code> · stop with
+      <code>python -m infinity_outreach.cli stop</code>.</p>
+  {% endif %}
+  <p>
+    <span class="status {{ 'ok' if email_mode == 'auto_send' else 'warn' }}">
+      EMAIL_MODE: {{ email_mode }}{% if email_mode != 'auto_send' %} — dry run, nothing is sent{% endif %}
+    </span>
+    <span class="status">Daily send limit: {{ daily_send_limit }}</span>
+  </p>
+</section>
+
 <div class="cards">
   <div class="card"><span class="num">{{ metrics.organizations }}</span><span class="lbl">Organizations</span></div>
-  <div class="card"><span class="num">{{ metrics.contacts }}</span><span class="lbl">Contacts (emails)</span></div>
+  <div class="card"><span class="num">{{ metrics.contacts }}</span><span class="lbl">Emails found</span></div>
   <div class="card"><span class="num">{{ metrics.drafts }}</span><span class="lbl">Drafts</span></div>
-  <div class="card"><span class="num">{{ metrics.approved }}</span><span class="lbl">Approved</span></div>
+  <div class="card"><span class="num">{{ metrics.sent_total }}</span><span class="lbl">Sent (all time)</span></div>
   <div class="card"><span class="num">{{ metrics.sent_today }}</span><span class="lbl">Sent today</span></div>
-  <div class="card"><span class="num">{{ metrics.cities_pending }}</span><span class="lbl">Cities pending</span></div>
+  <div class="card"><span class="num">{{ metrics.orgs_contacted }}</span><span class="lbl">Orgs contacted</span></div>
 </div>
 
 <section class="panel">
-  <h2>Outreach funnel</h2>
-  <div class="cards">
-    <div class="card"><span class="num">{{ metrics.organizations }}</span><span class="lbl">Discovered</span></div>
-    <div class="card"><span class="num">{{ metrics.contacts }}</span><span class="lbl">Emails found</span></div>
-    <div class="card"><span class="num">{{ metrics.drafts }}</span><span class="lbl">Drafted</span></div>
-    <div class="card"><span class="num">{{ metrics.sent_total }}</span><span class="lbl">Sent (all time)</span></div>
-    <div class="card"><span class="num">{{ metrics.orgs_contacted }}</span><span class="lbl">Orgs contacted</span></div>
-  </div>
+  <h2>Region progress</h2>
+  {% if region_progress %}
+    <table>
+      <thead><tr><th>Region</th><th>Cities done</th><th>Progress</th></tr></thead>
+      <tbody>
+      {% for r in region_progress %}
+        <tr>
+          <td>{{ r.region }}</td>
+          <td>{{ r.done }} / {{ r.total }}</td>
+          <td>
+            <div class="bar"><div class="bar-fill" style="width: {{ r.pct }}%"></div></div>
+            <span class="muted">{{ r.pct }}%</span>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="muted">No regions seeded yet. The loop seeds Europe first when it starts.</p>
+  {% endif %}
 </section>
 
 <section class="panel">
@@ -30,45 +64,25 @@
     <div class="card"><span class="num">{{ metrics.cities_osm }}</span><span class="lbl">Via OSM (free)</span></div>
     <div class="card"><span class="num">{{ metrics.cities_google }}</span><span class="lbl">Via Google Places</span></div>
   </div>
-</section>
-
-<section class="panel">
-  <h2>Current campaign</h2>
-  <ul class="kv">
-    <li><b>Religions:</b> {{ campaign.religions | join(', ') if campaign.religions else '—' }}</li>
-    <li><b>Countries:</b> {{ campaign.countries | length }} selected</li>
-    <li><b>Email mode:</b> <span class="tag tag-{{ campaign.email_mode }}">{{ campaign.email_mode }}</span></li>
-    <li><b>Daily limit:</b> {{ campaign.daily_send_limit }}</li>
-    <li><b>Languages in email:</b>
-        {% if campaign.include_native %}native{% endif %}
-        {% if campaign.include_native and campaign.include_english %}+{% endif %}
-        {% if campaign.include_english %}English{% endif %}
-    </li>
-  </ul>
-  <p>
-    <span class="status {{ 'ok' if places_ok else 'warn' }}">Places API: {{ 'configured' if places_ok else 'not set' }}</span>
-    <span class="status {{ 'ok' if smtp_ok else 'warn' }}">SMTP / mailbox: {{ 'configured' if smtp_ok else 'not set' }}</span>
-  </p>
   {% set pct = (places_calls_today / places_daily_limit * 100) | int if places_daily_limit > 0 else 0 %}
   <p>
     <span class="status {{ 'ok' if pct < 80 else ('warn' if pct < 100 else 'err') }}">
       Places API calls today: {{ places_calls_today }} / {{ places_daily_limit }}
-      {% if pct >= 100 %} — limit reached, discovery paused{% elif pct >= 80 %} — nearing limit{% endif %}
+      {% if pct >= 100 %} — limit reached, Google paused (OSM continues){% elif pct >= 80 %} — nearing limit{% endif %}
     </span>
+    <span class="status {{ 'ok' if smtp_ok else 'warn' }}">SMTP / mailbox: {{ 'configured' if smtp_ok else 'not set' }}</span>
+    <span class="status {{ 'ok' if places_ok else 'warn' }}">Places API key: {{ 'set' if places_ok else 'not set (OSM only)' }}</span>
   </p>
 </section>
 
 <section class="panel">
-  <h2>Run the pipeline</h2>
-  <p class="hint">Each step runs in the background. Refresh the page to see updated counts and the log below.</p>
-  <div class="actions">
-    <form method="post" action="/actions/seed-cities"><button>1 · Seed cities</button></form>
-    <form method="post" action="/actions/discover"><button {{ '' if places_ok else 'disabled title="Set GOOGLE_PLACES_API_KEY"' }}>2 · Discover</button></form>
-    <form method="post" action="/actions/enrich"><button>3 · Enrich emails</button></form>
-    <form method="post" action="/actions/draft"><button>4 · Draft</button></form>
-    <form method="post" action="/actions/send"><button class="danger" {{ '' if smtp_ok else 'disabled title="Configure SMTP first"' }}>5 · Send</button></form>
-    <form method="post" action="/actions/pipeline"><button class="primary">Run all (no send)</button></form>
-  </div>
+  <h2>Current targeting</h2>
+  <ul class="kv">
+    <li><b>Religions:</b> {{ campaign.religions | join(', ') if campaign.religions else '—' }}</li>
+    <li><b>Regions (in order):</b> {{ campaign.regions | join(' → ') if campaign.regions else '—' }}</li>
+  </ul>
+  <p class="hint">Change these on <a href="/settings">Campaign Setup</a>. Sending policy + the email
+    template live in <code>.env</code> and <code>email_templates/</code>.</p>
 </section>
 
 <section class="panel">

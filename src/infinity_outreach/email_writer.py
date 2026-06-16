@@ -1,21 +1,24 @@
-"""Generate respectful, bilingual outreach drafts for an organization.
+"""Assemble the outreach email for an organization from fixed template files.
 
-Primary path: ask the local LLM (Ollama/Hermes) to write a short, human,
-non-spammy invitation in the organization's native language *and* English.
-Fallback path (LLM offline): a clean bilingual template so the pipeline never
-crashes — the draft is flagged ``used_fallback=True`` for review.
+No AI writes anything here. The operator provides finished, Gmail-ready HTML
+templates in ``email_templates/`` (one per language, see that folder's README).
+This module only:
 
-Every draft includes an explicit opt-out line (compliance + deliverability).
+  * loads the native-language template (if one exists for the org's language),
+  * always appends the English template below it,
+  * substitutes ``{{org_name}}`` (the greeting) and ``{{opt_out}}`` (compliance),
+  * guarantees an opt-out line is present.
+
+The result is HTML and is stored verbatim in ``email_drafts.body``.
 """
 
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from functools import lru_cache
 
-from .config import PROMPTS_DIR
-from .constants import language_name
-from .ollama_client import OllamaUnavailable, chat
+from .config import get_settings, template_dir
 
 
 @dataclass
@@ -26,182 +29,103 @@ class DraftContent:
     error: str | None = None
 
 
-def _load_prompt_template() -> str:
-    path = PROMPTS_DIR / "write_outreach_email.md"
-    try:
-        return path.read_text(encoding="utf-8")
-    except OSError:
-        # Minimal inline fallback if the prompt file is missing.
-        return (
-            "You are an outreach assistant for {app_name}. Write a short, "
-            "respectful invitation. Return exactly:\nSUBJECT: ...\nBODY:\n..."
-        )
+_SEPARATOR = (
+    '\n<hr style="border:none;border-top:1px solid #ddd;margin:28px 0;">\n'
+    '<p style="font-size:12px;color:#999;margin:0 0 12px;">English version</p>\n'
+)
 
 
-def _opt_out_line(sender_email: str, native_lang: str) -> str:
+def _opt_out_line(sender_email: str) -> str:
     addr = sender_email or "us"
     return (
-        f"If you would prefer not to hear from us, simply reply with "
+        f'If you would prefer not to hear from us, simply reply with '
         f'"unsubscribe" to {addr} and we will not contact you again.'
     )
 
 
-def _build_user_prompt(
-    *,
-    org_name: str,
-    city: str | None,
-    country: str | None,
-    religion: str | None,
-    native_lang: str,
-    include_native: bool,
-    include_english: bool,
-    campaign,
-) -> str:
-    template = _load_prompt_template()
-    languages_wanted = []
-    if include_native and native_lang.lower() != "english":
-        languages_wanted.append(native_lang)
-    if include_english or not languages_wanted:
-        languages_wanted.append("English")
-    langs = " and ".join(dict.fromkeys(languages_wanted))
+@lru_cache(maxsize=64)
+def load_template(language_code: str) -> str | None:
+    """Return the raw HTML of ``outreach_<code>.html``, or None if absent.
 
-    return template.format(
-        app_name=getattr(campaign, "app_name", "Infinity Faith"),
-        app_url=getattr(campaign, "app_url", ""),
-        sender_name=getattr(campaign, "sender_name", "Infinity Faith Team"),
-        sender_org=getattr(campaign, "sender_org", "Infinity Faith"),
-        sender_email=getattr(campaign, "sender_email", ""),
-        pitch=getattr(campaign, "pitch", ""),
-        subject_hint=getattr(campaign, "subject_hint", ""),
-        extra_instructions=getattr(campaign, "extra_instructions", ""),
-        org_name=org_name,
-        city=city or "",
-        country=country or "",
-        religion=religion or "their community",
-        languages=langs,
-        native_language=native_lang,
-    )
+    Cached because the same handful of language files are read for thousands of
+    organizations. Call ``load_template.cache_clear()`` after editing a file.
+    """
+    code = (language_code or "").strip().lower()
+    if not code:
+        return None
+    path = template_dir() / f"outreach_{code}.html"
+    try:
+        return path.read_text(encoding="utf-8")
+    except OSError:
+        return None
 
 
-def _parse_llm_output(text: str) -> tuple[str | None, str | None]:
-    """Parse the strict 'SUBJECT: ...\\nBODY:\\n...' format."""
-    if not text:
-        return None, None
-    subj_match = re.search(r"SUBJECT:\s*(.+)", text, re.IGNORECASE)
-    body_match = re.search(r"BODY:\s*(.*)", text, re.IGNORECASE | re.DOTALL)
-    subject = subj_match.group(1).strip() if subj_match else None
-    body = body_match.group(1).strip() if body_match else None
-    return subject, body
+def _strip_html_comments(html: str) -> str:
+    return re.sub(r"<!--.*?-->", "", html, flags=re.DOTALL).strip()
 
 
-def _fallback_draft(
-    *,
-    org_name: str,
-    city: str | None,
-    native_lang: str,
-    include_native: bool,
-    include_english: bool,
-    campaign,
-) -> DraftContent:
-    app = getattr(campaign, "app_name", "Infinity Faith")
-    sender_name = getattr(campaign, "sender_name", "Infinity Faith Team")
-    sender_org = getattr(campaign, "sender_org", "Infinity Faith")
-    sender_email = getattr(campaign, "sender_email", "")
-    app_url = getattr(campaign, "app_url", "")
-    pitch = getattr(campaign, "pitch", "")
-    place = f" in {city}" if city else ""
-
-    english = (
-        f"Dear {org_name} team,\n\n"
-        f"My name is {sender_name}, and I help with {app}. {pitch}\n\n"
-        f"As a respected community{place}, your perspective would mean a lot to "
-        f"us. We would be grateful if you would take a look and share any "
-        f"feedback — there is no cost and no obligation.\n\n"
-        f"{f'You can learn more here: {app_url}.' if app_url else ''}\n\n"
-        f"With respect,\n{sender_name}\n{sender_org}\n\n"
-        f"{_opt_out_line(sender_email, native_lang)}"
-    )
-
-    parts = []
-    if include_native and native_lang.lower() != "english":
-        parts.append(
-            f"[{native_lang}]\n"
-            f"(Native-language version pending — generated by the local model "
-            f"when available.)\n"
-        )
-    if include_english or not parts:
-        parts.append(f"[English]\n{english}")
-
-    return DraftContent(
-        subject=getattr(campaign, "subject_hint", f"An invitation from {app}"),
-        body="\n\n".join(parts).strip(),
-        used_fallback=True,
-        error="LLM unavailable; template fallback used.",
-    )
+def _fill(html: str, *, org_name: str, opt_out: str) -> str:
+    filled = html.replace("{{org_name}}", org_name).replace("{{opt_out}}", opt_out)
+    return _strip_html_comments(filled)
 
 
 def build_email(
     *,
     org_name: str,
-    city: str | None,
-    country: str | None,
-    religion: str | None,
-    language_code: str | None,
-    campaign,
+    city: str | None = None,
+    country: str | None = None,
+    religion: str | None = None,
+    language_code: str | None = None,
+    campaign=None,
 ) -> DraftContent:
-    """Produce a bilingual outreach draft for one organization."""
-    native_lang = language_name(language_code)
-    include_native = getattr(campaign, "include_native", True)
-    include_english = getattr(campaign, "include_english", True)
+    """Build the final bilingual (native + English) HTML email for one org.
 
-    system = (
-        "You are a careful, respectful outreach assistant. You never write "
-        "spam, never manipulate, never overpromise. You write short, warm, "
-        "human messages and always follow the requested output format exactly."
-    )
-    user = _build_user_prompt(
-        org_name=org_name,
-        city=city,
-        country=country,
-        religion=religion,
-        native_lang=native_lang,
-        include_native=include_native,
-        include_english=include_english,
-        campaign=campaign,
-    )
+    ``city``/``country``/``religion``/``campaign`` are accepted for backward
+    compatibility with the previous AI writer but are not used: the email body
+    comes entirely from the template files.
+    """
+    settings = get_settings()
+    sender_email = settings.effective_sender_email
+    opt_out = _opt_out_line(sender_email)
+    name = (org_name or "friends").strip()
 
-    try:
-        result = chat(system, user, temperature=0.5, max_tokens=900)
-    except OllamaUnavailable:
-        return _fallback_draft(
-            org_name=org_name,
-            city=city,
-            native_lang=native_lang,
-            include_native=include_native,
-            include_english=include_english,
-            campaign=campaign,
+    english = load_template("en")
+    code = (language_code or "").strip().lower()
+    native = load_template(code) if code and code != "en" else None
+
+    parts: list[str] = []
+    if native:
+        parts.append(_fill(native, org_name=name, opt_out=opt_out))
+    if english:
+        parts.append(_fill(english, org_name=name, opt_out=opt_out))
+
+    if not parts:
+        # No template files at all — degrade to a minimal compliant message
+        # rather than crash the pipeline. Flag it so it shows up in review.
+        body = (
+            f'<div style="font-family:Arial,sans-serif;font-size:15px;">'
+            f"<p>Dear {name},</p>"
+            f"<p>(No email template found. Add email_templates/outreach_en.html.)</p>"
+            f'<p style="font-size:12px;color:#888;">{opt_out}</p></div>'
+        )
+        return DraftContent(
+            subject=_subject_for(name, settings),
+            body=body,
+            used_fallback=True,
+            error="No email_templates/outreach_en.html found.",
         )
 
-    subject, body = _parse_llm_output(result.text)
-    if not subject or not body:
-        # Model replied but not in the required shape — keep raw text as body.
-        if result.text.strip():
-            return DraftContent(
-                subject=subject or getattr(campaign, "subject_hint", "Hello"),
-                body=body or result.text.strip(),
-                used_fallback=False,
-            )
-        return _fallback_draft(
-            org_name=org_name,
-            city=city,
-            native_lang=native_lang,
-            include_native=include_native,
-            include_english=include_english,
-            campaign=campaign,
-        )
+    body = (_SEPARATOR.join(parts)) if len(parts) == 2 else parts[0]
 
-    # Guarantee an opt-out line is present even if the model forgot it.
+    # Guarantee an opt-out line exists even if the operator removed the placeholder.
     if "unsubscribe" not in body.lower() and "opt out" not in body.lower():
-        body = f"{body}\n\n{_opt_out_line(getattr(campaign, 'sender_email', ''), native_lang)}"
+        body += (
+            f'\n<p style="font-size:12px;color:#888;margin-top:24px;">{opt_out}</p>'
+        )
 
-    return DraftContent(subject=subject, body=body, used_fallback=False)
+    return DraftContent(subject=_subject_for(name, settings), body=body, used_fallback=False)
+
+
+def _subject_for(org_name: str, settings) -> str:
+    subject = settings.email_subject or "An invitation to try Infinity Faith"
+    return subject.replace("{{org_name}}", org_name)

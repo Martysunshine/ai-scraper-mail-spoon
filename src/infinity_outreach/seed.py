@@ -78,12 +78,24 @@ def parse_language_rows(path: Path | None = None) -> list[CityRow]:
     return rows
 
 
-def seed_cities(session: Session, *, only_countries: list[str] | None = None) -> int:
-    """Insert cities into the DB (skip existing). Returns new-row count."""
+def seed_cities(
+    session: Session,
+    *,
+    only_countries: list[str] | None = None,
+    only_continents: list[str] | None = None,
+) -> int:
+    """Insert cities into the DB (skip existing). Returns new-row count.
+
+    Filter by country names and/or by continent (region). The autonomous loop
+    seeds one region at a time via ``only_continents=["Europe"]`` etc.
+    """
     rows = parse_language_rows()
     if only_countries:
         wanted = {c.strip().lower() for c in only_countries}
         rows = [r for r in rows if r.country.lower() in wanted]
+    if only_continents:
+        regions = {c.strip().lower() for c in only_continents}
+        rows = [r for r in rows if (r.continent or "").lower() in regions]
 
     existing = {
         (c, co)

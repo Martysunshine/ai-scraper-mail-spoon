@@ -1,9 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Organizations</h1>
-<p class="hint">Discovered religious organizations. Showing the most recent 200.</p>
+<p class="hint">Discovered religious organizations. Showing the most recent 200.
+  Full table (every org + what was sent) is exported to
+  <code>data/exports/organizations.csv</code>.</p>
 <table>
-  <thead><tr><th>ID</th><th>Name</th><th>City</th><th>Country</th><th>Religion</th><th>Website</th><th>Emails</th></tr></thead>
+  <thead><tr>
+    <th>ID</th><th>Name</th><th>City</th><th>Country</th><th>Religion</th>
+    <th>Website</th><th>Email</th><th>Source</th><th>Status</th>
+  </tr></thead>
   <tbody>
   {% for o in orgs %}
     <tr>
@@ -13,10 +18,12 @@
       <td>{{ o.country or '' }}</td>
       <td>{{ o.religion or '' }}</td>
       <td>{% if o.website %}<a href="{{ o.website }}" target="_blank" rel="noopener">link</a>{% endif %}</td>
-      <td>{{ o.contacts }}</td>
+      <td>{{ o.email or '' }}</td>
+      <td><span class="muted">{{ o.source }}</span></td>
+      <td><span class="tag {{ 'tag-sent' if o.status == 'contacted' else '' }}">{{ o.status }}</span></td>
     </tr>
   {% else %}
-    <tr><td colspan="7" class="muted">No organizations yet. Run discovery (needs a Places API key) or import a CSV.</td></tr>
+    <tr><td colspan="9" class="muted">No organizations yet. Start the agent: <code>python -m infinity_outreach.cli auto</code></td></tr>
   {% endfor %}
   </tbody>
 </table>

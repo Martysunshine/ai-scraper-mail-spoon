@@ -1,10 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Drafts — review queue</h1>
+<h1>Drafts — preview</h1>
+<p class="hint">Read-only preview of the emails the agent has prepared. With
+  <code>EMAIL_MODE=draft</code> these are never sent — inspect them, then set
+  <code>EMAIL_MODE=auto_send</code> in <code>.env</code> to go live.</p>
 <p class="filters">
   <a href="/drafts" class="{{ 'active' if not status else '' }}">All</a>
   <a href="/drafts?status=draft" class="{{ 'active' if status == 'draft' else '' }}">Draft</a>
-  <a href="/drafts?status=approved" class="{{ 'active' if status == 'approved' else '' }}">Approved</a>
   <a href="/drafts?status=sent" class="{{ 'active' if status == 'sent' else '' }}">Sent</a>
   <a href="/drafts?status=rejected" class="{{ 'active' if status == 'rejected' else '' }}">Rejected</a>
 </p>
@@ -14,18 +16,16 @@
   <div class="draft-head">
     <div>
       <span class="tag tag-{{ d.status }}">{{ d.status }}</span>
-      {% if d.fallback %}<span class="tag warn">template fallback</span>{% endif %}
+      {% if d.fallback %}<span class="tag warn">no template found</span>{% endif %}
       <b>#{{ d.id }} · {{ d.org }}</b>
       <span class="muted">→ {{ d.email }}</span>
     </div>
     <div class="draft-actions">
-      <form method="post" action="/drafts/{{ d.id }}/approve"><button class="ok">Approve</button></form>
-      <form method="post" action="/drafts/{{ d.id }}/reject"><button class="danger">Reject</button></form>
-      <form method="post" action="/suppress"><input type="hidden" name="email" value="{{ d.email }}"><button>Suppress</button></form>
+      <form method="post" action="/suppress"><input type="hidden" name="email" value="{{ d.email }}"><button>Suppress address</button></form>
     </div>
   </div>
   <div class="draft-subject">{{ d.subject }}</div>
-  <pre class="draft-body">{{ d.body }}</pre>
+  <div class="draft-preview">{{ d.body | safe }}</div>
 </article>
 {% else %}
 <p class="muted">No drafts in this view.</p>
