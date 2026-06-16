@@ -59,7 +59,7 @@ class Settings(BaseSettings):
     # Discovery
     google_places_api_key: str = Field(default="", alias="GOOGLE_PLACES_API_KEY")
     search_provider: str = Field(default="google_places", alias="SEARCH_PROVIDER")
-    places_daily_limit: int = Field(default=500, alias="PLACES_DAILY_LIMIT")
+    places_daily_limit: int = Field(default=300, alias="PLACES_DAILY_LIMIT")
 
     # Website enrichment
     request_timeout: int = Field(default=15, alias="REQUEST_TIMEOUT")

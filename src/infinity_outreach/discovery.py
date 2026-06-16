@@ -108,16 +108,18 @@ def _place_details(place_id: str, http: requests.Session, api_key: str) -> dict:
 
 def _text_search(
     query: str, http: requests.Session, api_key: str, *, max_results: int
-) -> tuple[list[str], int]:
-    """Text Search (New) returning only place IDs — Essentials tier, cheapest billing.
+) -> tuple[list[dict], int]:
+    """Text Search (New) with Pro field mask — returns full place data in one call.
 
-    Returns (place_id_list, pages_fetched).
+    Requesting name/address/website/phone directly avoids a Place Details call per
+    org, cutting total API calls by ~3×. Returns (place_data_list, pages_fetched).
     """
-    place_ids: list[str] = []
+    places: list[dict] = []
     body: dict = {"textQuery": query, "pageSize": min(20, max_results)}
     headers = {
         "X-Goog-Api-Key": api_key,
-        "X-Goog-FieldMask": "places.id",
+        "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,"
+                             "places.nationalPhoneNumber,places.websiteUri",
         "Content-Type": "application/json",
     }
     pages = 0
@@ -132,7 +134,7 @@ def _text_search(
             if resp.status_code == 403:
                 raise DiscoveryUnavailable(
                     f"Places API (New) returned 403 — check your API key, billing, and that "
-                    "'Places API (New)' is enabled in Google Cloud: {resp.text}"
+                    f"'Places API (New)' is enabled in Google Cloud: {resp.text}"
                 )
             resp.raise_for_status()
             data = resp.json()
@@ -141,18 +143,24 @@ def _text_search(
         except (requests.RequestException, ValueError):
             break
 
-        for place in data.get("places", []):
-            pid = place.get("id")
+        for raw in data.get("places", []):
+            pid = raw.get("id")
             if pid:
-                place_ids.append(pid)
+                places.append({
+                    "id": pid,
+                    "name": raw.get("displayName", {}).get("text", ""),
+                    "address": raw.get("formattedAddress"),
+                    "website": raw.get("websiteUri"),
+                    "phone": raw.get("nationalPhoneNumber"),
+                })
         pages += 1
 
         token = data.get("nextPageToken")
-        if not token or len(place_ids) >= max_results or pages >= 2:
+        if not token or len(places) >= max_results or pages >= 2:
             break
         body = {"textQuery": query, "pageSize": 20, "pageToken": token}
 
-    return place_ids[:max_results], pages
+    return places[:max_results], pages
 
 
 def find_organizations(
@@ -195,37 +203,42 @@ def find_organizations(
                     "Resume tomorrow or raise PLACES_DAILY_LIMIT in .env."
                 )
 
-        place_ids, pages_fetched = _text_search(query, http, api_key, max_results=limit)
+        place_data, pages_fetched = _text_search(query, http, api_key, max_results=limit)
         if db_session is not None:
             _log_calls(db_session, "text_search", pages_fetched)
 
         subtype = _subtype_from_query(query)
-        for pid in place_ids:
+        for place in place_data:
+            pid = place["id"]
             if pid in seen_place_ids:
                 continue
             seen_place_ids.add(pid)
 
-            # --- Guardrail: check again before each Place Details call ---
-            if db_session is not None:
-                used = _count_calls_today(db_session)
-                if used >= settings.places_daily_limit:
-                    raise DiscoveryUnavailable(
-                        f"Daily Places API limit reached ({used}/{settings.places_daily_limit} calls). "
-                        "Resume tomorrow or raise PLACES_DAILY_LIMIT in .env."
-                    )
+            website = place.get("website")
 
-            details = _place_details(pid, http, api_key)
-            if db_session is not None:
-                _log_calls(db_session, "place_details", 1)
+            # Fallback: only call Place Details if text search didn't return a website.
+            # This keeps Place Details calls rare — most real orgs include websiteUri.
+            if not website:
+                if db_session is not None:
+                    used = _count_calls_today(db_session)
+                    if used >= settings.places_daily_limit:
+                        raise DiscoveryUnavailable(
+                            f"Daily Places API limit reached ({used}/{settings.places_daily_limit} calls). "
+                            "Resume tomorrow or raise PLACES_DAILY_LIMIT in .env."
+                        )
+                details = _place_details(pid, http, api_key)
+                if db_session is not None:
+                    _log_calls(db_session, "place_details", 1)
+                website = details.get("website")
+                place = {**place, **{k: v for k, v in details.items() if v}}
 
-            name = details.get("name") or "Unknown"
             candidates.append(
                 OrgCandidate(
-                    name=name,
+                    name=place.get("name") or "Unknown",
                     place_id=pid,
-                    address=details.get("formatted_address"),
-                    website=details.get("website"),
-                    phone=details.get("phone"),
+                    address=place.get("address") or place.get("formatted_address"),
+                    website=website,
+                    phone=place.get("phone"),
                     religion=rel.name,
                     religion_subtype=subtype,
                 )
