@@ -21,6 +21,9 @@
       EMAIL_MODE: {{ email_mode }}{% if email_mode != 'auto_send' %} — dry run, nothing is sent{% endif %}
     </span>
     <span class="status">Daily send limit: {{ daily_send_limit }}</span>
+    {% if warmup and warmup.enabled %}
+    <span class="status ok">Warm-up: day {{ warmup.day }} · cap {{ warmup.cap }}{% if warmup.next_value %} · next {{ warmup.next_value }}/day in {{ warmup.next_bump_in_days }}d{% endif %}</span>
+    {% endif %}
   </p>
 </section>
 

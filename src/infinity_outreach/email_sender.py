@@ -28,6 +28,7 @@ from sqlalchemy.orm import Session
 
 from .compliance import can_send
 from .config import get_settings
+from .email_verify import verify_email
 from .models import Contact, EmailDraft, Organization, SentLog
 
 
@@ -159,6 +160,15 @@ def send_draft(
     allowed, reason = can_send(session, email, daily_limit)
     if not allowed:
         return SendOutcome(draft.id, email, False, reason)
+
+    # Don't send to a syntactically broken or non-receiving address — a bounce
+    # would hurt the domain's sending reputation. Flag the contact so it's skipped.
+    deliverable, vreason = verify_email(email)
+    if not deliverable:
+        contact.status = "invalid"
+        draft.status = "failed"
+        draft.error = f"unverified email: {vreason}"
+        return SendOutcome(draft.id, email, False, f"unverified email: {vreason}")
 
     msg = _build_message(
         subject=draft.subject,

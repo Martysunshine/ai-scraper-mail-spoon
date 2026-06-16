@@ -208,6 +208,6 @@ def region_rank(continent: str | None) -> int:
 
 # Draft / sending status vocabularies (kept in one place to avoid typos).
 DRAFT_STATUSES = ("draft", "approved", "sent", "rejected", "failed")
-CONTACT_STATUSES = ("new", "valid", "bounced", "opted_out")
+CONTACT_STATUSES = ("new", "valid", "invalid", "bounced", "opted_out")
 CITY_STATUSES = ("pending", "processing", "done", "skipped")
 ORG_STATUSES = ("new", "contacted")

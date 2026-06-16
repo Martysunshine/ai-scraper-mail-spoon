@@ -20,9 +20,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from . import discovery, email_sender, email_writer
-from .compliance import is_suppressed, remaining_daily_budget
+from .compliance import current_daily_limit, is_suppressed, remaining_daily_budget
 from .config import get_settings
 from .constants import DEFAULT_RELIGIONS, region_rank
+from .email_verify import verify_email
 from .models import (
     CampaignSetting,
     City,
@@ -179,6 +180,11 @@ def run_enrich(session: Session, *, limit: int = 10) -> StageStats:
             org.notes = (org.notes or "") + f" [enrich: {result.error}]"
             continue
         for addr in result.emails:
+            # Skip undeliverable addresses up front so they never get drafted or
+            # sent (dead emails bounce and damage the domain's reputation).
+            deliverable, _ = verify_email(addr)
+            if not deliverable:
+                continue
             contact = Contact(
                 organization_id=org.id,
                 email=addr,
@@ -267,7 +273,7 @@ def run_send(
     # Sending policy lives in .env (set from VS Code), not the campaign row.
     settings = get_settings()
     mode = settings.email_mode
-    daily_limit = settings.daily_send_limit
+    daily_limit = current_daily_limit(session)  # warm-up aware
 
     # First, honour any opt-out replies that arrived.
     suppressed = scan_opt_outs(session)

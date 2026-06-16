@@ -29,7 +29,12 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from infinity_outreach import campaign as campaign_mod
-from infinity_outreach.compliance import add_to_suppression, sent_today_count
+from infinity_outreach.compliance import (
+    add_to_suppression,
+    current_daily_limit,
+    sent_today_count,
+    warmup_status,
+)
 from infinity_outreach.config import get_settings
 from infinity_outreach.constants import REGION_ORDER, RELIGIONS
 from infinity_outreach.db import init_db, session_scope
@@ -122,7 +127,8 @@ def dashboard(request: Request, msg: str = ""):
             "region_progress": region_progress,
             "last_auto": last_auto,
             "email_mode": settings.email_mode,
-            "daily_send_limit": settings.daily_send_limit,
+            "daily_send_limit": current_daily_limit(s),
+            "warmup": warmup_status(s),
             "smtp_ok": settings.smtp_configured(),
             "places_ok": settings.places_configured(),
             "places_calls_today": places_calls_today,
@@ -321,7 +327,8 @@ def api_status():
         return {
             "app": settings.app_name,
             "email_mode": settings.email_mode,
-            "daily_send_limit": settings.daily_send_limit,
+            "daily_send_limit": current_daily_limit(s),
+            "warmup": warmup_status(s),
             "sent_today": sent_today_count(s),
             "religions": campaign.religions,
             "regions": campaign.regions,

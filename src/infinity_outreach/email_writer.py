@@ -78,17 +78,16 @@ def load_signature() -> str | None:
         text = path.read_text(encoding="utf-8")
     except OSError:
         return None
+    # Strip HTML comments FIRST — otherwise a comment that mentions the table tag
+    # would be matched by the search below and leak into the email body.
+    text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
     start = text.find('<table id="sig"')
     if start == -1:
         return None
-    # The signature table contains nested tables; bound the search at the page's
-    # "Actions" UI and take everything up to the last </table> before it.
-    anchor = text.find("<!-- Actions -->", start)
-    chunk = text[start:anchor] if anchor != -1 else text[start:]
-    close = chunk.rfind("</table>")
-    if close == -1:
+    close = text.rfind("</table>")  # last </table> = end of the (possibly nested) signature
+    if close == -1 or close < start:
         return None
-    return chunk[: close + len("</table>")].strip()
+    return text[start : close + len("</table>")].strip()
 
 
 def _fill(html: str, *, org_name: str, opt_out: str) -> str:

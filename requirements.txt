@@ -20,6 +20,9 @@ lxml>=5.1.0
 # Trust the OS certificate store so corporate / antivirus TLS interception
 # (common on Windows) doesn't break outbound HTTPS to OSM, Google and SMTP.
 truststore>=0.9.0
+# Email verification (syntax + MX) to keep the bounce rate low before sending.
+email-validator>=2.1.0
+dnspython>=2.4.0
 
 # Local LLM (Ollama, OpenAI-compatible API)
 openai>=1.30.0

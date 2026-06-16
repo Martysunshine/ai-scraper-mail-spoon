@@ -69,6 +69,15 @@ class Settings(BaseSettings):
     daily_send_limit: int = Field(default=200, alias="DAILY_SEND_LIMIT")
     send_delay_seconds: float = Field(default=20.0, alias="SEND_DELAY_SECONDS")
 
+    # Automatic domain warm-up: ramp the effective daily limit from WARMUP_START
+    # up to DAILY_SEND_LIMIT, multiplying by WARMUP_MULTIPLIER every
+    # WARMUP_EVERY_DAYS days. Anchored to WARMUP_START_DATE, else the first send.
+    warmup_enabled: bool = Field(default=False, alias="WARMUP_ENABLED")
+    warmup_start: int = Field(default=50, alias="WARMUP_START")
+    warmup_multiplier: float = Field(default=1.25, alias="WARMUP_MULTIPLIER")
+    warmup_every_days: int = Field(default=3, alias="WARMUP_EVERY_DAYS")
+    warmup_start_date: str = Field(default="", alias="WARMUP_START_DATE")
+
     # Email content (the body comes from email_templates/, only the subject is here)
     email_subject: str = Field(
         default="An invitation to try Infinity Faith", alias="EMAIL_SUBJECT"

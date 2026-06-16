@@ -21,7 +21,12 @@ from rich.table import Table
 
 from infinity_outreach import campaign as campaign_mod
 from infinity_outreach import seed as seed_mod
-from infinity_outreach.compliance import add_to_suppression, sent_today_count
+from infinity_outreach.compliance import (
+    add_to_suppression,
+    current_daily_limit,
+    sent_today_count,
+    warmup_status,
+)
 from infinity_outreach.config import EXPORTS_DIR, get_settings
 from infinity_outreach.db import init_db, session_scope
 from infinity_outreach.models import (
@@ -398,9 +403,15 @@ def cmd_stats() -> None:
         table.add_row("Drafts", str(s.query(EmailDraft).count()))
         table.add_row("Approved drafts", str(s.query(EmailDraft).filter(EmailDraft.status == "approved").count()))
         table.add_row("Sent (all time)", str(s.query(SentLog).filter(SentLog.status == "sent").count()))
+        ws = warmup_status(s)
         table.add_row("Sent today", str(sent_today_count(s)))
-        # Sending policy is read from .env (not the campaign row) — show the truth.
-        table.add_row("Daily limit (.env)", str(settings.daily_send_limit))
+        table.add_row("Daily limit (today)", str(ws["current"]))
+        if ws["enabled"]:
+            table.add_row(
+                "Warm-up",
+                f"on · day {ws.get('day', 0)} · cap {ws['cap']} · "
+                f"next {ws.get('next_value', '?')}/day in {ws.get('next_bump_in_days', '?')}d",
+            )
         table.add_row("Email mode (.env)", settings.email_mode)
         table.add_row("Religions", ", ".join(c.religions))
         table.add_row("Regions", " -> ".join(c.regions) if c.regions else "—")

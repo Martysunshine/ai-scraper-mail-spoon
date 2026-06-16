@@ -25,7 +25,7 @@ import signal
 import time
 from datetime import datetime, timezone
 
-from .compliance import sent_today_count
+from .compliance import current_daily_limit, sent_today_count
 from .config import STOP_FILE, get_settings
 from .db import session_scope
 from . import campaign as campaign_mod
@@ -74,11 +74,12 @@ def _heartbeat(session, *, region: str | None, summary: dict) -> str:
     settings = get_settings()
     google_used = _count_calls_today(session)
     google_left = max(0, settings.places_daily_limit - google_used)
+    day_limit = current_daily_limit(session)  # warm-up aware
 
     line = (
         f"region={region or '—'} | pending_cities={summary['pending_cities']} "
         f"enrich={summary['enrich_pending']} draft={summary['draft_pending']} "
-        f"sendable={summary['sendable']} | sent_today={sent_today}/{settings.daily_send_limit} "
+        f"sendable={summary['sendable']} | sent_today={sent_today}/{day_limit} "
         f"| google_left={google_left} | mode={settings.email_mode}"
     )
     run = TaskRun(
