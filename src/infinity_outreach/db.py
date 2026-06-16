@@ -13,6 +13,7 @@ from .config import get_settings, ensure_runtime_dirs
 
 _engine: Engine | None = None
 _SessionFactory: sessionmaker[Session] | None = None
+_db_ready: bool = False
 
 
 def get_engine() -> Engine:
@@ -47,8 +48,12 @@ def get_session_factory() -> sessionmaker[Session]:
 def session_scope() -> Iterator[Session]:
     """Transactional session context manager.
 
-    Commits on success, rolls back on exception, always closes.
+    Commits on success, rolls back on exception, always closes. The schema is
+    created + migrated automatically on first use, so every entry point (CLI,
+    web, autonomous loop) works against a fresh or an older database without
+    anyone having to remember to run ``init-db`` first.
     """
+    _ensure_ready()
     session = get_session_factory()()
     try:
         yield session
@@ -78,11 +83,20 @@ def _migrate(engine) -> None:
                 pass  # column already exists
 
 
+def _ensure_ready() -> None:
+    """Run the one-time schema create + migrate for this process (idempotent)."""
+    global _db_ready
+    if not _db_ready:
+        init_db()
+
+
 def init_db() -> None:
     """Create all tables and apply forward migrations. Safe to run repeatedly."""
+    global _db_ready
     from .models import Base  # imported here to avoid a circular import
 
     ensure_runtime_dirs()
     engine = get_engine()
     Base.metadata.create_all(engine)
     _migrate(engine)
+    _db_ready = True

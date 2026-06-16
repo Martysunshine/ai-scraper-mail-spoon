@@ -115,7 +115,7 @@ def _run_one_cycle() -> tuple[bool, str]:
 
         # 3. Status + report.
         summary = campaign_mod.work_summary(session, campaign)
-        active_region = region or _current_region(summary, campaign)
+        active_region = summary.get("active_region") or region
         line = _heartbeat(session, region=active_region, summary=summary)
         write_orgs_report(session)
 
@@ -135,16 +135,6 @@ def _run_one_cycle() -> tuple[bool, str]:
             settings.email_mode != "auto_send" or summary["sendable"] == 0
         )
         return done, line
-
-
-def _current_region(summary: dict, campaign) -> str | None:
-    from .constants import REGION_ORDER
-
-    selected = [r for r in REGION_ORDER if r in (campaign.regions or [])]
-    # First selected region that still has unseeded or pending work is "active".
-    if summary["unseeded_regions"]:
-        return summary["unseeded_regions"][0]
-    return selected[-1] if selected else None
 
 
 def run_forever() -> None:

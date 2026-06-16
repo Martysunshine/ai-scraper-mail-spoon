@@ -359,12 +359,13 @@ def cmd_stats() -> None:
         table.add_row("Approved drafts", str(s.query(EmailDraft).filter(EmailDraft.status == "approved").count()))
         table.add_row("Sent (all time)", str(s.query(SentLog).filter(SentLog.status == "sent").count()))
         table.add_row("Sent today", str(sent_today_count(s)))
-        table.add_row("Daily limit", str(c.daily_send_limit))
-        table.add_row("Email mode", c.email_mode)
+        # Sending policy is read from .env (not the campaign row) — show the truth.
+        table.add_row("Daily limit (.env)", str(settings.daily_send_limit))
+        table.add_row("Email mode (.env)", settings.email_mode)
         table.add_row("Religions", ", ".join(c.religions))
-        table.add_row("Countries", str(len(c.countries)) + " selected")
+        table.add_row("Regions", " -> ".join(c.regions) if c.regions else "—")
         table.add_row("SMTP configured", "yes" if settings.smtp_configured() else "no")
-        table.add_row("Places API key", "yes" if settings.places_configured() else "no")
+        table.add_row("Places API key", "yes" if settings.places_configured() else "no (OSM only)")
     console.print(table)
 
 

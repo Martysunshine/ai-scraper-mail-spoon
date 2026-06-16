@@ -368,7 +368,9 @@ def work_summary(session: Session, campaign: CampaignSetting | None = None) -> d
     city_q = select(City).where(City.status == "pending")
     if campaign.regions:
         city_q = city_q.where(City.continent.in_(list(campaign.regions)))
-    pending_cities = len(session.execute(city_q).scalars().all())
+    pending_list = session.execute(city_q).scalars().all()
+    pending_cities = len(pending_list)
+    pending_continents = {c.continent for c in pending_list if c.continent}
 
     enrich_pending = len(
         session.execute(
@@ -398,10 +400,18 @@ def work_summary(session: Session, campaign: CampaignSetting | None = None) -> d
     }
     unseeded_regions = [r for r in selected if r not in seeded_continents]
 
+    # The region currently being worked = first selected region (in order) that
+    # still has work: either not yet seeded, or with cities still pending.
+    active_region = next(
+        (r for r in selected if r in unseeded_regions or r in pending_continents),
+        None,
+    )
+
     return {
         "pending_cities": pending_cities,
         "enrich_pending": enrich_pending,
         "draft_pending": draft_pending,
         "sendable": sendable,
         "unseeded_regions": unseeded_regions,
+        "active_region": active_region,
     }
